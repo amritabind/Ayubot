@@ -8,26 +8,18 @@ const API_CONFIG = (() => {
     const isLocalhost = window.location.hostname === 'localhost' || 
                         window.location.hostname === '127.0.0.1';
 
-    if (isLocalhost && window.location.port === '3000') {
-        // Local development with frontend dev server
+    if (isLocalhost) {
+        // Local development
         apiBaseUrl = 'http://localhost:8080/api';
-    } else if (isLocalhost) {
-        // Local development with direct file access
-        apiBaseUrl = 'http://localhost:8080/api';
+    } else if (window.location.hostname.includes('vercel.app')) {
+        // Vercel deployment - use Render backend
+        apiBaseUrl = 'https://ayubot.onrender.com/api';
+    } else if (window.location.hostname.includes('render.com')) {
+        // If both frontend and backend on Render
+        apiBaseUrl = `${window.location.protocol}//${window.location.hostname}/api`;
     } else {
-        // Production deployment - use the same domain as the frontend
-        // Assumes backend and frontend are on same domain (e.g., render.com)
-        const protocol = window.location.protocol;
-        const hostname = window.location.hostname;
-        
-        // Check if this is served from main domain
-        if (hostname.includes('render.com')) {
-            // Backend is served from a subdomain or path
-            // Adjust this based on your Render deployment structure
-            apiBaseUrl = `${protocol}//${hostname}/api`;
-        } else {
-            apiBaseUrl = `${protocol}//${hostname}:8080/api`;
-        }
+        // Other production deployments
+        apiBaseUrl = `${window.location.protocol}//${window.location.hostname}/api`;
     }
 
     return {
@@ -35,6 +27,9 @@ const API_CONFIG = (() => {
         setApiUrl: (url) => { apiBaseUrl = url; }
     };
 })();
+
+// Log the API URL for debugging
+console.log('API Base URL:', API_CONFIG.getApiUrl());
 
 // Export for use in other files if using modules
 if (typeof module !== 'undefined' && module.exports) {

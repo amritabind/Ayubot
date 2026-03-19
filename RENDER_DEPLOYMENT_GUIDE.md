@@ -79,7 +79,7 @@ Or import the SQL from your `database.sql` file (may need PostgreSQL syntax adju
 
 8. Click "Create Web Service"
 9. Wait for deployment (10-15 minutes)
-10. Copy the deployed URL (e.g., `https://ayubot-backend.render.com`)
+10. Copy the deployed URL (e.g., `https://ayubot.onrender.com/`)
 
 ## Step 4: Deploy Frontend
 
@@ -117,7 +117,7 @@ const API_BASE_URL = 'http://localhost:8080/api';
 
 With:
 ```javascript
-const API_BASE_URL = 'https://ayubot-backend.render.com/api';
+const API_BASE_URL = 'https://https://ayubot.onrender.com/api';
 ```
 
 Or use the dynamic config included:
