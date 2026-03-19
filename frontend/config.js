@@ -5,31 +5,46 @@ const API_CONFIG = (() => {
     let apiBaseUrl;
 
     // Check if running locally (localhost or 127.0.0.1)
-    const isLocalhost = window.location.hostname === 'localhost' || 
-                        window.location.hostname === '127.0.0.1';
+    const hostname = window.location.hostname;
+    const protocol = window.location.protocol;
+    
+    console.log('Frontend URL:', window.location.href);
+    console.log('Hostname:', hostname);
 
-    if (isLocalhost) {
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
         // Local development
         apiBaseUrl = 'http://localhost:8080/api';
-    } else if (window.location.hostname.includes('vercel.app')) {
-        // Vercel deployment - use Render backend
+        console.log('Using local development API URL');
+    } else if (hostname.includes('vercel.app')) {
+        // Production: Vercel frontend with Render backend
         apiBaseUrl = 'https://ayubot.onrender.com/api';
-    } else if (window.location.hostname.includes('render.com')) {
-        // If both frontend and backend on Render
-        apiBaseUrl = `${window.location.protocol}//${window.location.hostname}/api`;
+        console.log('Using Render backend from Vercel frontend');
+    } else if (hostname.includes('render.com')) {
+        // Both frontend and backend on Render
+        apiBaseUrl = `${protocol}//${hostname}/api`;
+        console.log('Using Render backend');
     } else {
         // Other production deployments
-        apiBaseUrl = `${window.location.protocol}//${window.location.hostname}/api`;
+        apiBaseUrl = `${protocol}//${hostname}/api`;
+        console.log('Using same-domain backend');
     }
 
     return {
-        getApiUrl: () => apiBaseUrl,
-        setApiUrl: (url) => { apiBaseUrl = url; }
+        getApiUrl: () => {
+            console.log('API URL:', apiBaseUrl);
+            return apiBaseUrl;
+        },
+        setApiUrl: (url) => { 
+            apiBaseUrl = url;
+            console.log('API URL updated to:', apiBaseUrl);
+        }
     };
 })();
 
-// Log the API URL for debugging
+// Log the API URL immediately
+console.log('=== AyuBot Config Initialized ===');
 console.log('API Base URL:', API_CONFIG.getApiUrl());
+console.log('================================');
 
 // Export for use in other files if using modules
 if (typeof module !== 'undefined' && module.exports) {
