@@ -1,0 +1,41 @@
+services:
+  - type: web
+    name: ayubot-backend
+    runtime: java
+    plan: free
+    buildCommand: cd backend/ayubot && mvn clean package -DskipTests
+    startCommand: java -jar target/ayubot-0.0.1-SNAPSHOT.jar
+    envVars:
+      - key: JAVA_VERSION
+        value: 21
+      - key: PORT
+        value: 10000
+      - key: SPRING_DATASOURCE_URL
+        fromDatabase:
+          name: ayubot-db
+          property: connectionString
+      - key: SPRING_DATASOURCE_USERNAME
+        fromDatabase:
+          name: ayubot-db
+          property: user
+      - key: SPRING_DATASOURCE_PASSWORD
+        fromDatabase:
+          name: ayubot-db
+          property: password
+      - key: GROQ_API_KEY
+        sync: false
+
+  - type: static
+    name: ayubot-frontend
+    staticPublishPath: ./frontend
+    buildCommand: npm install && npm run build 2>/dev/null || echo "No build needed"
+    headers:
+      - path: /
+        name: Cache-Control
+        value: no-cache, no-store, must-revalidate
+
+databases:
+  - name: ayubot-db
+    plan: free
+    databaseName: ayubot
+    databaseUser: ayubot

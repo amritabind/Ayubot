@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<title>Edit Doctor Profile</title>
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+	<link href="enhanced-styles.css" rel="stylesheet"/>
+	<style>
+		body { background: linear-gradient(135deg,#eef2ff,#fef3c7); min-height:100vh; }
+		.profile-card { 
+			max-width: 980px; margin: 30px auto; padding: 24px; border-radius: 14px; 
+			background: rgba(255,255,255,0.96); box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+			transform: translateY(12px); opacity: 0; animation: popIn 0.6s forwards; }
+		@keyframes popIn { to { transform: translateY(0); opacity: 1; } }
+		.avatar-preview img { max-width: 100%; border-radius: 8px; }
+		.save-btn { transition: transform .18s ease, box-shadow .18s ease; }
+		.save-btn:active { transform: translateY(2px) scale(.995); }
+		.field-label { font-weight: 600; }
+		.fade-in { animation: fadeUp .45s ease both; }
+		@keyframes fadeUp { from { opacity:0; transform: translateY(8px);} to {opacity:1; transform:none;} }
+	</style>
+</head>
+<body>
+	<div class="container">
+		<div class="profile-card">
+			<div class="d-flex justify-content-between align-items-center mb-4">
+				<h2 class="mb-0">Edit Doctor Profile</h2>
+				<div class="text-end text-muted">Complete your public profile so patients can trust you</div>
+			</div>
+
+			<form id="profileForm">
+				<div class="row g-4">
+					<div class="col-lg-6">
+						<div class="mb-3 fade-in">
+							<label class="field-label">Specialty</label>
+							<select id="specialty" class="form-select">
+								<option value="">Select specialty...</option>
+								<option>General Practice</option>
+								<option>Cardiology</option>
+								<option>Dermatology</option>
+								<option>Neurology</option>
+								<option>Pediatrics</option>
+								<option>Orthopedics</option>
+								<option>ENT</option>
+								<option>Ophthalmology</option>
+								<option>Psychiatry</option>
+								<option>Radiology</option>
+							</select>
+						</div>
+
+						<div class="mb-3 fade-in" style="animation-delay:.05s">
+							<label class="field-label">Qualifications</label>
+							<input id="qualifications" class="form-control" placeholder="e.g. MBBS, MD" />
+						</div>
+
+						<div class="mb-3 fade-in" style="animation-delay:.08s">
+							<label class="field-label">Clinic / Hospital</label>
+							<input id="clinicAddress" class="form-control" placeholder="Clinic name or address" />
+						</div>
+
+						<div class="mb-3 fade-in" style="animation-delay:.1s">
+							<label class="field-label">Location</label>
+							<input list="cities" id="location" class="form-control" placeholder="City or area" />
+							<datalist id="cities">
+								<option>New York</option>
+								<option>London</option>
+								<option>Mumbai</option>
+								<option>Bengaluru</option>
+								<option>Delhi</option>
+								<option>San Francisco</option>
+								<option>Toronto</option>
+								<option>Sydney</option>
+							</datalist>
+						</div>
+
+						<div class="mb-3 fade-in" style="animation-delay:.12s">
+							<label class="field-label">Phone Number</label>
+							<input id="phoneNumber" class="form-control" />
+						</div>
+					</div>
+
+					<div class="col-lg-6">
+						<div class="mb-3 fade-in">
+							<label class="field-label">Short Bio</label>
+							<textarea id="bio" class="form-control" rows="6" placeholder="Introduce yourself to patients"></textarea>
+						</div>
+
+						<div class="mb-3 fade-in" style="animation-delay:.05s">
+							<label class="field-label">License Image</label>
+							<input id="licenseFile" type="file" class="form-control" accept="image/*" />
+							<div id="preview" class="mt-3 avatar-preview"></div>
+						</div>
+					</div>
+				</div>
+
+				<div class="d-flex gap-3 mt-4">
+					<button class="btn btn-primary save-btn" type="submit">Save Profile</button>
+					<button class="btn btn-outline-secondary" type="button" onclick="window.location.href='doctor-dashboard.html'">Cancel</button>
+				</div>
+			</form>
+
+			<div id="msg" class="mt-3"></div>
+		</div>
+	</div>
+
+	<script>
+		const API_URL = API_CONFIG.getApiUrl();
+		const userId = localStorage.getItem('userId');
+
+		async function loadProfile() {
+			const res = await fetch(`${API_URL}/doctors/${userId}`);
+			if (!res.ok) return;
+			const doc = await res.json();
+			document.getElementById('specialty').value = doc.specialty || '';
+			document.getElementById('qualifications').value = doc.qualifications || '';
+			document.getElementById('clinicAddress').value = doc.clinicAddress || '';
+			document.getElementById('phoneNumber').value = doc.phoneNumber || '';
+			document.getElementById('bio').value = doc.bio || '';
+			document.getElementById('location').value = doc.clinicAddress || '';
+			if (doc.licenseImage) {
+				const img = document.createElement('img');
+				img.src = doc.licenseImage;
+				img.style.maxWidth = '360px';
+				document.getElementById('preview').innerHTML = '';
+				document.getElementById('preview').appendChild(img);
+			}
+		}
+
+		function fileToDataUrl(file) {
+			return new Promise((resolve, reject) => {
+				const reader = new FileReader();
+				reader.onload = e => resolve(e.target.result);
+				reader.onerror = e => reject(e);
+				reader.readAsDataURL(file);
+			});
+		}
+
+		document.getElementById('profileForm').addEventListener('submit', async (e) => {
+			e.preventDefault();
+			const specialty = document.getElementById('specialty').value.trim();
+			const qualifications = document.getElementById('qualifications').value.trim();
+			const clinicAddress = document.getElementById('clinicAddress').value.trim();
+			const phoneNumber = document.getElementById('phoneNumber').value.trim();
+			const bio = document.getElementById('bio').value.trim();
+			const location = document.getElementById('location').value.trim();
+			const fileInput = document.getElementById('licenseFile');
+
+			let licenseImage = null;
+			if (fileInput.files && fileInput.files[0]) {
+				licenseImage = await fileToDataUrl(fileInput.files[0]);
+			}
+
+			const payload = {
+				specialty, qualifications, clinicAddress, phoneNumber, bio
+			};
+			if (location) payload.clinicAddress = location;
+			if (licenseImage) payload.licenseImage = licenseImage;
+
+			const btn = document.querySelector('.save-btn');
+			btn.disabled = true;
+			btn.textContent = 'Saving...';
+
+			const res = await fetch(`${API_URL}/doctors/${userId}`, {
+				method: 'PUT',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(payload)
+			});
+
+			const msg = document.getElementById('msg');
+			if (res.ok) {
+				msg.innerHTML = '<div class="alert alert-success">Profile updated</div>';
+			} else {
+				const data = await res.json().catch(() => ({}));
+				msg.innerHTML = `<div class="alert alert-danger">${data.error || 'Update failed'}</div>`;
+			}
+			btn.disabled = false;
+			btn.textContent = 'Save Profile';
+		});
+
+		window.addEventListener('DOMContentLoaded', () => {
+			const role = localStorage.getItem('userRole');
+			if (role !== 'DOCTOR') {
+				window.location.href = 'login.html';
+			}
+			loadProfile();
+		});
+	</script>
+
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+	<!-- lang.js removed -->
+</body>
+</html>
+*** End Patch

@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AyuBot - Upload Medical Report</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+  <script src="https://unpkg.com/tesseract.js@4.0.2/dist/tesseract.min.js"></script>
+  <script src="config.js"></script>
+  <style>
+    body { 
+      background: linear-gradient(135deg, #667eea, #764ba2); 
+      min-height: 100vh; 
+      padding: 40px 0;
+      font-family: 'Segoe UI', sans-serif;
+    }
+    .upload-card {
+      max-width: 700px; 
+      margin: auto; 
+      border-radius: 25px; 
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3); 
+      background: var(--card-bg, white);
+    }
+    .card-header { 
+      position: relative;
+      background: linear-gradient(45deg, #667eea, #764ba2) !important;
+      color: white !important;
+    }
+    .card-body {
+      padding: 40px;
+      background: var(--card-bg, white);
+      color: var(--text-primary, #333);
+    }
+    .header-actions {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      display: flex;
+      gap: 8px;
+    }
+    .header-actions button {
+      background: rgba(255,255,255,0.2);
+      border: 1px solid rgba(255,255,255,0.3);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 15px;
+      font-size: 14px;
+      transition: all 0.3s;
+      cursor: pointer;
+    }
+    .header-actions button:hover {
+      background: rgba(255,255,255,0.3);
+      transform: scale(1.05);
+    }
+    .form-control {
+      background: var(--input-bg, white);
+      color: var(--text-primary, #333);
+      border: 2px solid var(--input-border, #ddd);
+      border-radius: 15px;
+      padding: 15px;
+      font-size: 16px;
+      transition: all 0.3s;
+    }
+    .form-control:focus {
+      border-color: #667eea;
+      box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+      background: var(--input-bg, white);
+      color: var(--text-primary, #333);
+    }
+    .preview-img { 
+      max-width: 100%; 
+      border-radius: 15px; 
+      margin: 20px 0;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+    .result-box { 
+      background: var(--bg-tertiary, #f8f9fa); 
+      padding: 25px; 
+      border-radius: 15px; 
+      margin-top: 25px;
+      border-left: 5px solid #667eea;
+      color: var(--text-primary, #333);
+    }
+    .result-box h4, .result-box h5 {
+      color: var(--text-primary, #333);
+    }
+    .spinner { 
+      display: none; 
+    }
+    .btn-analyze {
+      background: linear-gradient(45deg, #28a745, #20c997);
+      border: none;
+      color: white;
+      padding: 15px;
+      border-radius: 25px;
+      font-size: 18px;
+      font-weight: bold;
+      width: 100%;
+      margin-top: 15px;
+      box-shadow: 0 10px 30px rgba(40, 167, 69, 0.4);
+      transition: all 0.3s;
+      cursor: pointer;
+    }
+    .btn-analyze:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 15px 40px rgba(40, 167, 69, 0.6);
+    }
+    .btn-save {
+      background: linear-gradient(45deg, #667eea, #764ba2);
+      border: none;
+      color: white;
+      padding: 12px 30px;
+      border-radius: 25px;
+      font-size: 16px;
+      font-weight: bold;
+      margin-top: 20px;
+      box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+      transition: all 0.3s;
+      cursor: pointer;
+    }
+    .btn-save:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 15px 40px rgba(102, 126, 234, 0.6);
+    }
+    .btn-save:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    .upload-icon {
+      font-size: 80px;
+      background: linear-gradient(45deg, #667eea, #764ba2);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 20px;
+    }
+    .note-box {
+      background: #fff3cd;
+      border-left: 4px solid #ffc107;
+      padding: 15px;
+      border-radius: 10px;
+      margin-top: 20px;
+      font-size: 14px;
+      color: #856404;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="upload-card">
+      <div class="card-header bg-primary text-white text-center py-4">
+        <div class="header-actions">
+          <button onclick="window.location.href='patient-dashboard.html'">
+            <i class="fas fa-home"></i>
+          </button>
+          <button onclick="logout()">
+            <i class="fas fa-sign-out-alt"></i>
+          </button>
+        </div>
+        <h2>Upload Medical Report</h2>
+        <p class="mb-0">Blood tests • X-ray • Prescription • MRI • Any report</p>
+      </div>
+      <div class="card-body p-5">
+        <div class="text-center mb-4">
+          <div class="upload-icon">
+            <i class="fas fa-cloud-upload-alt"></i>
+          </div>
+          <input type="file" id="reportFile" accept="image/*" class="form-control form-control-lg" />
+          <button onclick="analyzeReport()" class="btn-analyze">
+            <i class="fas fa-robot me-2"></i>Analyze with AI Doctor
+          </button>
+          <div class="note-box">
+            <strong><i class="fas fa-info-circle"></i> Supported Files:</strong> JPG, PNG • Max 5MB
+          </div>
+        </div>
+          </div>
+        </div>
+
+        <div class="text-center">
+          <img id="preview" class="preview-img" style="display:none;" alt="Report preview"/>
+          <div id="loading" class="spinner spinner-border text-primary mt-4" role="status">
+            <span class="visually-hidden">Analyzing...</span>
+          </div>
+        </div>
+
+        <div id="result" class="result-box" style="display:none;">
+          <h4><i class="fas fa-chart-line"></i> AI Analysis Result</h4>
+          <div id="extractedText" class="mb-4"></div>
+          <hr style="border-color: var(--card-border, #ddd);">
+          <h5><i class="fas fa-stethoscope"></i> Doctor's Interpretation:</h5>
+          <div id="aiSummary"></div>
+          <div class="text-center mt-4">
+            <button onclick="saveReportToDatabase()" class="btn-save" id="saveBtn">
+              <i class="fas fa-save me-2"></i>Save to My Reports
+            </button>
+          </div>
+          <small class="text-muted d-block mt-4">
+            <i class="fas fa-exclamation-triangle"></i> This is preliminary AI analysis. Always consult your doctor.
+            <br>© 2025 Amrita Bind (2543003) & Bhagyashree Kalshetty (2543020)
+          </small>
+        </div>
+      </div>
+          </small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE_URL = API_CONFIG.getApiUrl();
+    let currentReport = {
+      fileName: '',
+      fileData: '',
+      extractedText: '',
+      aiAnalysis: '',
+      reportType: 'other'
+    };
+
+    document.getElementById("reportFile").addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      
+      currentReport.fileName = file.name;
+      
+      // Convert file to base64 for storage
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        currentReport.fileData = event.target.result;
+      };
+      reader.readAsDataURL(file);
+      
+      // Determine report type from filename
+      const fileName = file.name.toLowerCase();
+      if (fileName.includes('blood') || fileName.includes('test')) {
+        currentReport.reportType = 'blood';
+      } else if (fileName.includes('xray') || fileName.includes('x-ray')) {
+        currentReport.reportType = 'xray';
+      } else if (fileName.includes('mri') || fileName.includes('scan')) {
+        currentReport.reportType = 'mri';
+      } else if (fileName.includes('prescription') || fileName.includes('rx')) {
+        currentReport.reportType = 'prescription';
+      } else {
+        currentReport.reportType = 'other';
+      }
+      
+      const preview = document.getElementById("preview");
+      preview.src = URL.createObjectURL(file);
+      preview.style.display = "block";
+      document.getElementById("result").style.display = "none";
+    });
+
+    async function analyzeReport() {
+      const fileInput = document.getElementById("reportFile");
+      if (!fileInput.files[0]) return alert("Please select a report first!");
+
+      const loading = document.getElementById("loading");
+      const resultDiv = document.getElementById("result");
+      loading.style.display = "block";
+      resultDiv.style.display = "none";
+
+      // Step 1: OCR using Tesseract.js (works on PDF & images)
+      const { data: { text } } = await Tesseract.recognize(
+        fileInput.files[0],
+        'eng',
+        { logger: m => console.log(m) }
+      );
+
+      document.getElementById("extractedText").innerHTML = 
+        `<strong>Extracted Text:</strong><br><pre style="background:#eee;padding:10px;border-radius:8px;font-size:90%;">${text.substring(0, 1000)}${text.length > 1000 ? '...' : ''}</pre>`;
+
+      // Step 2: Send to Groq AI for medical interpretation
+      const prompt = `You are AyuBot, an AI medical report analyzer.
+Analyze this report and explain in simple language:
+- Key findings
+- Normal or abnormal values
+- Possible implications
+- Recommendations
+
+Always end with: "Please show this report to your doctor for accurate diagnosis."
+
+Report text:
+${text.substring(0, 4000)}
+
+Respond in bullet points. Be safe and professional.`;
+
+      try {
+        const res = await fetch(`${API_BASE_URL}/chat`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: prompt })
+        });
+
+        const aiResponse = await res.text();
+        document.getElementById("aiSummary").innerHTML = aiResponse.replace(/\n/g, "<br>");
+        
+        // Store AI analysis
+        currentReport.extractedText = text;
+        currentReport.aiAnalysis = aiResponse;
+      } catch (e) {
+        document.getElementById("aiSummary").innerHTML = 
+          "<strong style='color:red;'>Backend not running. Start Spring Boot server!</strong>";
+      }
+
+      loading.style.display = "none";
+      resultDiv.style.display = "block";
+    }
+
+    async function saveReportToDatabase() {
+      const userId = localStorage.getItem('userId');
+      const token = localStorage.getItem('token');
+      const saveBtn = document.getElementById('saveBtn');
+
+      if (!userId) {
+        alert('User ID not found. Please login again.');
+        return;
+      }
+
+      if (!currentReport.aiAnalysis) {
+        alert('Please analyze a report first before saving.');
+        return;
+      }
+
+      // Disable button and show loading state
+      saveBtn.disabled = true;
+      saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Saving...';
+
+      try {
+        const reportData = {
+          patientId: parseInt(userId),
+          reportType: currentReport.reportType,
+          reportName: currentReport.fileName,
+          extractedText: currentReport.extractedText.substring(0, 5000),
+          aiAnalysis: currentReport.aiAnalysis,
+          fileData: currentReport.fileData
+        };
+
+        const response = await fetch(`${API_BASE_URL}/reports`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(reportData)
+        });
+
+        if (response.ok) {
+          // Show success message
+          const successDiv = document.createElement('div');
+          successDiv.className = 'alert alert-success mt-3 d-flex align-items-center';
+          successDiv.innerHTML = `
+            <i class="fas fa-check-circle me-2" style="font-size: 20px;"></i>
+            <div>
+              <strong>Report saved successfully!</strong><br>
+              <a href="patient-reports.html" class="alert-link">View in My Reports</a>
+            </div>
+          `;
+          const resultDiv = document.getElementById('result');
+          resultDiv.insertBefore(successDiv, resultDiv.firstChild);
+          
+          // Reset the form after a delay
+          setTimeout(() => {
+            document.getElementById('reportFile').value = '';
+            document.getElementById('preview').style.display = 'none';
+            document.getElementById('result').style.display = 'none';
+            currentReport = {
+              fileName: '',
+              fileData: '',
+              extractedText: '',
+              aiAnalysis: '',
+              reportType: 'other'
+            };
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = '<i class="fas fa-save me-2"></i>Save to My Reports';
+          }, 2000);
+        } else {
+          const error = await response.text();
+          alert('Failed to save report: ' + error);
+          saveBtn.disabled = false;
+          saveBtn.innerHTML = '<i class="fas fa-save me-2"></i>Save to My Reports';
+        }
+      } catch (error) {
+        console.error('Error saving report:', error);
+        alert('Error saving report: ' + error.message);
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = '<i class="fas fa-save me-2"></i>Save to My Reports';
+      }
+    }
+
+    // Check authentication
+    window.addEventListener('DOMContentLoaded', () => {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        window.location.href = 'login.html';
+      }
+    });
+
+    // Logout function
+    function logout() {
+      if (confirm('Are you sure you want to logout?')) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('userRole');
+        localStorage.removeItem('userEmail');
+        localStorage.removeItem('userName');
+        localStorage.removeItem('userId');
+        window.location.href = 'login.html';
+      }
+    }
+  </script>
+  <!-- lang.js removed -->
+  <script src="theme.js"></script>
+</body>
+</html>

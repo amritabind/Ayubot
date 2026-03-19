@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AyuBot - Report Preview</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+  <script src="config.js"></script>
+  <style>
+    body { background: #f4f7fa; min-height:100vh; font-family: 'Segoe UI', sans-serif; }
+    .report-preview { max-width:1100px; margin:40px auto; }
+    .file-preview { background: white; border-radius:10px; padding:18px; border:1px solid #e9ecef; }
+    .meta-row { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+    pre.analysis { background:#fff3cd; padding:12px; border-radius:8px; white-space:pre-wrap; }
+  </style>
+</head>
+<body>
+  <div class="report-preview container">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h3><i class="fas fa-file-medical me-2"></i>Report Preview</h3>
+      <div>
+        <button class="btn btn-secondary" onclick="history.back()"><i class="fas fa-arrow-left me-1"></i>Back</button>
+      </div>
+    </div>
+
+    <div id="loading" class="text-center py-5">
+      <div class="spinner-border text-primary" role="status"></div>
+      <div class="mt-3 text-muted">Loading report...</div>
+    </div>
+
+    <div id="content" style="display:none;">
+      <div class="mb-3 file-preview">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <h4 id="reportName">Report</h4>
+            <div class="meta-row text-muted small">
+              <span id="reportType">Type</span>
+              <span>•</span>
+              <span id="reportDate">Date</span>
+              <span>•</span>
+              <span id="sharedBy">Shared by</span>
+            </div>
+          </div>
+          <div>
+            <a id="downloadBtn" class="btn btn-outline-primary btn-sm" download><i class="fas fa-download me-1"></i>Download</a>
+          </div>
+        </div>
+
+        <hr />
+
+        <div id="fileContainer" style="min-height:200px;">
+          <!-- PDF iframe or image preview inserted here -->
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <h5>AI Analysis</h5>
+        <pre id="aiAnalysis" class="analysis">No analysis available</pre>
+      </div>
+
+      <div class="mb-3">
+        <h5>Extracted Text</h5>
+        <pre id="extractedText" class="analysis">No extracted text available</pre>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE_URL = API_CONFIG.getApiUrl();
+
+    function getParam(name){
+      const p = new URLSearchParams(window.location.search);
+      return p.get(name);
+    }
+
+    async function loadReport(reportId){
+      const token = localStorage.getItem('token');
+      try{
+        const resp = await fetch(`${API_BASE_URL}/reports/${reportId}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if(!resp.ok) throw new Error('Failed to load report');
+        const r = await resp.json();
+        renderReport(r);
+      }catch(err){
+        console.error(err);
+        document.getElementById('loading').innerHTML = `<div class="alert alert-danger">Error loading report. ${err.message}</div>`;
+      }
+    }
+
+    function renderReport(r){
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('content').style.display = 'block';
+
+      document.getElementById('reportName').textContent = r.reportName || `Report #${r.id}`;
+      document.getElementById('reportType').textContent = (r.reportType || 'General').toUpperCase();
+      document.getElementById('reportDate').textContent = r.createdAt ? new Date(r.createdAt).toLocaleString() : '—';
+      document.getElementById('sharedBy').textContent = r.patient ? (r.patient.name || `Patient #${r.patient.id}`) : (r.patientId ? `Patient #${r.patientId}` : 'Patient');
+
+      const fileContainer = document.getElementById('fileContainer');
+      const downloadBtn = document.getElementById('downloadBtn');
+
+      if (r.fileData) {
+        if (r.fileData.startsWith('data:application/pdf')){
+          fileContainer.innerHTML = `<iframe src="${r.fileData}" style="width:100%; height:600px; border:0;"></iframe>`;
+          downloadBtn.href = r.fileData;
+        } else if (r.fileData.startsWith('data:image')){
+          fileContainer.innerHTML = `<img src="${r.fileData}" class="img-fluid rounded" alt="Report image" style="max-height:600px; width:100%; object-fit:contain;"/>`;
+          downloadBtn.href = r.fileData;
+        } else {
+          fileContainer.innerHTML = `<div class="alert alert-secondary">Preview not available. <a href="#" id="dl">Download</a></div>`;
+          downloadBtn.style.display = 'inline-block';
+          downloadBtn.href = '#';
+        }
+      } else {
+        fileContainer.innerHTML = `<div class="alert alert-secondary">No file attached to this report.</div>`;
+        downloadBtn.style.display = 'none';
+      }
+
+      document.getElementById('aiAnalysis').textContent = r.aiAnalysis || 'Analysis pending';
+      document.getElementById('extractedText').textContent = r.extractedText || 'No extracted text available';
+    }
+
+    // Run
+    (function(){
+      const id = getParam('reportId');
+      if(!id) {
+        document.getElementById('loading').innerHTML = `<div class="alert alert-warning">No reportId provided in URL</div>`;
+        return;
+      }
+      loadReport(id);
+    })();
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- lang.js removed -->
+  <script src="theme.js"></script>
+</body>
+</html>

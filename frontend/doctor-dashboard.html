@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+  <link href="enhanced-styles.css" rel="stylesheet"/>
+
+  <style>
+    :root {
+      --sidebar-bg: #1e3a5f;
+      --card-bg: white;
+      --text-primary: #333;
+      --accent1: #667eea;
+      --accent2: #764ba2;
+    }
+    body {
+      background: #f4f7fa;
+      min-height: 100vh;
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 280px;
+      background: var(--sidebar-bg);
+      position: fixed;
+      height: 100vh;
+      left: 0;
+      top: 0;
+      padding: 30px 0;
+      box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+      overflow: auto;
+      z-index: 20;
+      transition: width .28s ease;
+    }
+    .sidebar-brand {
+      font-size: 22px;
+      font-weight: 900;
+      color: white;
+      padding: 0 30px;
+      margin-bottom: 40px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .sidebar-title {
+      color: rgba(255,255,255,0.5);
+      font-size: 12px;
+      text-transform: uppercase;
+      padding: 0 30px;
+      margin-top: 30px;
+      margin-bottom: 10px;
+      font-weight: 600;
+    }
+    .nav-item {
+      padding: 15px 30px;
+      color: rgba(255,255,255,0.7);
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      text-decoration: none;
+      margin-bottom: 0;
+      border-radius: 0;
+    }
+    .nav-item:hover, .nav-item.active {
+      background: rgba(255,255,255,0.1);
+      color: white;
+      text-decoration: none;
+    }
+    .nav-item.active {
+      border-left: 4px solid #4a90e2;
+      background: rgba(74,144,226,0.2);
+    }
+    .nav-item i {
+      width: 20px;
+      text-align: center;
+      font-size: 16px;
+    }
+
+    /* Main content */
+    .main-content { margin-left: 280px; padding: 30px; }
+    .top-bar {
+      background: var(--card-bg);
+      border-radius: 15px;
+      padding: 20px 30px;
+      margin-bottom: 30px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .page-title {
+      font-size: 28px;
+      font-weight: bold;
+      color: var(--text-primary);
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* Stat cards row */
+    .stat-card {
+      background: var(--card-bg);
+      border-radius: 15px;
+      padding: 25px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      text-align: center;
+      color: #fff;
+      min-height: 130px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .stat-number { font-size: 36px; font-weight: bold; line-height: 1; }
+    .stat-label { font-size: 14px; color: rgba(255,255,255,0.88); margin-top: 8px; }
+
+    /* Feature cards */
+    .feature-card {
+      border-radius: 15px;
+      padding: 25px;
+      background: var(--card-bg);
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      transition: transform .28s cubic-bezier(.2,.9,.3,1), box-shadow .28s;
+      cursor: pointer;
+    }
+    .feature-card:hover { transform: translateY(-5px); box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
+    .feature-icon {
+      width: 64px;
+      height: 64px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, var(--accent1), var(--accent2));
+      color: #fff;
+      font-size: 26px;
+      margin-bottom: 15px;
+    }
+
+    /* Info card */
+    .info-card { border-radius: 15px; padding: 22px; background: var(--card-bg); box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+
+    /* Responsive */
+    @media (max-width: 992px) {
+      .main-content { margin-left: 20px; padding: 20px; }
+      .sidebar { position: relative; width: 100%; height: auto; margin-bottom: 18px; }
+    }
+
+    /* subtle animations */
+    .stat-number.pop { animation: pop .7s cubic-bezier(.2,.9,.3,1) both; }
+    @keyframes pop { 0%{transform:scale(.6);opacity:0} 60%{transform:scale(1.06);opacity:1} 100%{transform:scale(1)} }
+
+    /* Collapsed sidebar */
+    .sidebar.collapsed { width: 80px; }
+    .sidebar.collapsed .sidebar-title, .sidebar.collapsed .nav-item span { display: none; }
+    .sidebar.collapsed .sidebar-brand { justify-content: center; padding: 0; }
+  </style>
+</head>
+<body>
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-brand">
+      <i class="fas fa-robot"></i> AyuBot
+    </div>
+    <div class="sidebar-title">Navigation</div>
+    <a href="doctor-dashboard.html" class="nav-item active">
+      <i class="fas fa-home"></i>
+      <span>Dashboard</span>
+    </a>
+    <a href="doctor-patients.html" class="nav-item">
+      <i class="fas fa-users"></i>
+      <span>My Patients</span>
+    </a>
+    <a href="doctor-consultations.html" class="nav-item">
+      <i class="fas fa-stethoscope"></i>
+      <span>Consultations</span>
+    </a>
+    <a href="doctor-edit-profile.html" class="nav-item">
+      <i class="fas fa-id-badge"></i>
+      <span>Edit Profile</span>
+    </a>
+    <a href="doctor-details.html" class="nav-item">
+      <i class="fas fa-user-md"></i>
+      <span>Public Profile</span>
+    </a>
+    <!-- Patient Reports removed -->
+    <div class="sidebar-title">Account</div>
+    <a href="#" onclick="logout()" class="nav-item">
+      <i class="fas fa-sign-out-alt"></i>
+      <span>Logout</span>
+    </a>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <div class="top-bar">
+      <div style="display:flex;align-items:center;gap:18px;">
+        <button id="sidebarToggle" class="btn btn-sm" style="background:transparent;border:0;color:var(--accent1);font-size:20px;">☰</button>
+        <h1 class="page-title"><i class="fas fa-home me-2"></i>Doctor Dashboard</h1>
+      </div>
+      <div class="d-flex align-items-center gap-3">
+        <span><i class="fas fa-user-md me-2"></i><strong id="doctorName">Dr. Demo Doctor</strong></span>
+        <button onclick="logout()" class="btn btn-outline-danger btn-sm">
+          <i class="fas fa-power-off me-1"></i>Logout
+        </button>
+      </div>
+    </div>
+
+    <!-- Statistics -->
+    <div class="row mb-4">
+      <div class="col-md-3 stat-card-1">
+        <div class="stat-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+          <div class="stat-number" id="totalPatients">
+            <i class="fas fa-spinner fa-spin"></i>
+          </div>
+          <div class="stat-label">Total Patients</div>
+        </div>
+      </div>
+      <div class="col-md-3 stat-card-2">
+        <div class="stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+          <div class="stat-number" id="pendingConsultations">
+            <i class="fas fa-spinner fa-spin"></i>
+          </div>
+          <div class="stat-label">Pending Consultations</div>
+        </div>
+      </div>
+      <div class="col-md-3 stat-card-3">
+        <div class="stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+          <div class="stat-number" id="totalReports">—</div>
+          <div class="stat-label">Total Reports</div>
+        </div>
+      </div>
+      <div class="col-md-3 stat-card-4">
+        <div class="stat-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+          <div class="stat-number">4.9</div>
+          <div class="stat-label">Patient Rating</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <h5 class="mb-4 mt-5" style="color: #333; font-weight: 700;">
+      <i class="fas fa-bolt me-2"></i>Quick Actions
+    </h5>
+    <div class="row mb-4">
+      <div class="col-md-4 feature-card-1">
+        <div class="feature-card icon-spin-hover" onclick="window.location.href='doctor-patients.html'">
+          <div class="feature-icon">
+            <i class="fas fa-users"></i>
+          </div>
+          <h5>View Patients</h5>
+          <p class="text-muted mb-0">See all patients assigned to you and their medical profiles</p>
+        </div>
+      </div>
+      <div class="col-md-4 feature-card-2">
+        <div class="feature-card icon-spin-hover" onclick="window.location.href='doctor-consultations.html'">
+          <div class="feature-icon">
+            <i class="fas fa-stethoscope"></i>
+          </div>
+          <h5>Manage Consultations</h5>
+          <p class="text-muted mb-0">Review symptoms, AI diagnosis, and add your professional notes</p>
+        </div>
+      </div>
+      <div class="col-md-4 feature-card-3">
+        <div class="feature-card icon-spin-hover">
+          <div class="feature-icon">
+            <i class="fas fa-file-medical"></i>
+          </div>
+          <h5>Patient Reports</h5>
+          <p class="text-muted mb-0">Access medical reports uploaded by your patients</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pending Consultations Section -->
+    <h5 class="mb-4 mt-5" style="color: #333; font-weight: 700;">
+      <i class="fas fa-clock me-2"></i>Pending Consultations
+      <span class="badge bg-danger float-end" id="consultationBadge">0</span>
+    </h5>
+    <div class="row mb-5" id="consultationsContainer">
+      <!-- Consultations will be loaded here -->
+      <div class="text-center w-100">
+        <i class="fas fa-spinner fa-spin" style="color: #4a90e2; font-size: 24px;"></i>
+        <p style="color: #555; margin-top: 10px;">Loading consultations...</p>
+      </div>
+    </div>
+
+    <!-- AI Support Info -->
+    <div class="info-card">
+      <h5 class="mb-3">
+        <i class="fas fa-robot me-2" style="color: #4a90e2;"></i>AI Diagnostic Support
+      </h5>
+      <p class="text-muted mb-3">
+        AyuBot assists you by analyzing patient symptoms, 3D body interactions, and uploaded reports.
+        All AI suggestions are preliminary and meant for reference only.
+      </p>
+      <div class="alert alert-info mb-0" style="border-radius: 15px; border-left: 4px solid #17a2b8; background: rgba(23,162,184,0.08); color: #0c5460;">
+        <i class="fas fa-lightbulb me-2"></i><strong>Feature:</strong> View patient's 3D symptom selection history and AI-generated insights below.
+      </div>
+    </div>
+
+    <!-- Patient 3D Symptom Reports -->
+    <h5 class="mb-3 mt-5" style="color: #333; font-weight: 700;">
+      <i class="fas fa-male me-2" style="color: #667eea;"></i>Patient 3D Symptom Reports
+      <span class="badge ms-2" style="background:linear-gradient(135deg,#667eea,#764ba2); font-size:12px;" id="symptomReportsBadge">0</span>
+    </h5>
+    <p class="text-muted mb-3" style="font-size:13px;">Consultations sent by patients from the 3D Symptom Checker, including AI diagnosis.</p>
+    <div id="symptomReportsContainer">
+      <div class="text-center w-100 py-3">
+        <i class="fas fa-spinner fa-spin" style="color:#4a90e2; font-size:22px;"></i>
+        <p style="color:#555; margin-top:8px;">Loading symptom reports...</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Load reports that patients have shared with this doctor
+    async function loadSharedReportsForDoctor(doctorId) {
+      const container = document.getElementById('sharedReportsList');
+      if (!container) return;
+      // show loading state
+      container.innerHTML = `<div class="text-center w-100"><i class="fas fa-spinner fa-spin" style="font-size:24px"></i><p style="color:#555;margin-top:10px;">Loading shared reports...</p></div>`;
+      try {
+        const token = localStorage.getItem('token');
+        const base = `${window.location.protocol}//${window.location.hostname}:8080/api`;
+        const url = `${base}/reports/shared/doctor/${doctorId}`;
+        console.debug('Fetching shared reports from', url, 'token present?', !!token);
+
+        const res = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` } });
+        // show a small debug hint in UI about URL and status
+        const debugInfo = document.createElement('div');
+        debugInfo.style.fontSize = '12px';
+        debugInfo.style.color = '#666';
+        debugInfo.style.marginBottom = '8px';
+        debugInfo.textContent = `Debug: GET ${url} — status ${res.status}`;
+
+        if (!res.ok) {
+          console.warn('Shared reports fetch non-ok', res.status, res.statusText);
+          if (res.status === 404) {
+            container.innerHTML = `<div class="text-center w-100"><p style="color:#555;">No shared reports found.</p></div>`;
+            container.prepend(debugInfo);
+            return;
+          }
+          const txt = await res.text().catch(() => '');
+          container.innerHTML = `<div class="alert alert-danger">Failed to load shared reports: ${res.status} ${res.statusText}<br/><pre style="white-space:pre-wrap;">${txt}</pre></div>`;
+          container.prepend(debugInfo);
+          return;
+        }
+
+        const data = await res.json().catch(async (e) => {
+          const raw = await res.text().catch(() => '');
+          console.error('Failed parsing JSON from shared reports response', e, raw);
+          return null;
+        });
+
+        console.debug('Shared reports response:', data);
+        const reports = Array.isArray(data) ? data : (data && Array.isArray(data.reports) ? data.reports : []);
+
+        if (!reports || reports.length === 0) {
+          container.innerHTML = `<div class="text-center w-100"><p style="color:#555;">No shared reports found.</p></div>`;
+          container.prepend(debugInfo);
+          // If server returned something unexpected, show it for debugging
+          if (data && Object.keys(data).length) {
+            const pre = document.createElement('pre');
+            pre.style.color = '#666';
+            pre.style.background = 'transparent';
+            pre.textContent = JSON.stringify(data, null, 2);
+            container.appendChild(pre);
+          }
+          return;
+        }
+
+        // render reports
+        container.innerHTML = reports.map(r => {
+          const date = r.createdAt ? new Date(r.createdAt).toLocaleDateString() : '';
+          const patient = r.sharedByName || r.patientName || (r.patient && (r.patient.name || r.patient.fullName)) || 'Patient';
+          const fileUrl = r.fileData || r.fileUrl || r.url || '#';
+          return `
+            <div class="col-md-4">
+              <div class="stat-card" style="background: white; color: #333; box-shadow: 0 2px 10px rgba(0,0,0,0.07);">
+                <div style="font-weight:700;">${escapeHtml(r.reportName || 'Report')}</div>
+                <div style="font-size:12px; color: #666;">${escapeHtml(patient)} • ${escapeHtml(date)}</div>
+                <div style="margin-top:12px; display:flex; gap:8px;">
+                  <button class="btn btn-sm btn-outline-light" onclick="viewSharedReport(${r.id})">View</button>
+                  ${ fileUrl !== '#' ? `<a class="btn btn-sm btn-primary" href="${fileUrl}" target="_blank" download>Download</a>` : '' }
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+        container.prepend(debugInfo);
+      } catch (err) {
+        console.error('Error loading shared reports', err);
+        container.innerHTML = `<div class="alert alert-danger">Error loading shared reports. Check console for details: ${escapeHtml(err && err.message)}</div>`;
+      }
+    }
+
+    // small helper to avoid HTML injection in debug render
+    function escapeHtml(s) {
+      if (!s && s !== 0) return '';
+      return String(s).replace(/[&<>"]/g, function(m){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]); });
+    }
+
+    function viewSharedReport(reportId) {
+      alert('Open report details UI for report id: ' + reportId + '\n(Implement modal preview if needed)');
+    }
+
+    // Auto-load on DOM ready if doctor
+    document.addEventListener('DOMContentLoaded', () => {
+      const role = localStorage.getItem('userRole');
+      const userId = localStorage.getItem('userId');
+      if (role && role.toLowerCase() === 'doctor' && userId) {
+        loadSharedReportsForDoctor(userId);
+      } else {
+        const container = document.getElementById('sharedReportsList');
+        if (container) container.innerHTML = `<div class="text-center w-100"><p style="color:#555;">Shared reports visible to assigned doctors only.</p></div>`;
+      }
+    });
+  </script>
+
+  <!-- Consultation Detail Modal -->
+  <div class="modal fade" id="consultationModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header border-0" style="background: linear-gradient(135deg, #1e3a5f 0%, #4a90e2 100%); color: white;">
+          <h5 class="modal-title">
+            <i class="fas fa-stethoscope me-2"></i>Consultation Details
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div id="modalContent">
+            <i class="fas fa-spinner fa-spin"></i> Loading...
+          </div>
+        </div>
+        <div class="modal-footer border-top-0">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-danger" id="rejectBtn" onclick="rejectConsultation()">
+            <i class="fas fa-times me-2"></i>Reject
+          </button>
+          <button type="button" class="btn btn-primary" id="confirmBtn" onclick="confirmConsultation()">
+            <i class="fas fa-check-double me-2"></i>Confirm
+          </button>
+          <button type="button" class="btn btn-success" id="acceptBtn" onclick="acceptConsultation()">
+            <i class="fas fa-check me-2"></i>Accept
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const API_BASE_URL = API_CONFIG.getApiUrl();
+    let currentConsultationId = null;
+    let currentConsultationData = null;
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const token = localStorage.getItem('token');
+      const userRole = localStorage.getItem('userRole');
+      const doctorName = localStorage.getItem('userName');
+      const userId = localStorage.getItem('userId');
+
+      if (!token || userRole !== 'DOCTOR') {
+        window.location.href = 'login.html';
+        return;
+      }
+
+      if (doctorName) {
+        document.getElementById('doctorName').textContent = doctorName;
+      }
+
+      if (userId) {
+        loadStatistics(userId);
+        loadPendingConsultations(userId);
+        loadSymptomReports(userId);
+      }
+    });
+
+    async function loadSymptomReports(doctorId) {
+      const container = document.getElementById('symptomReportsContainer');
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch(`${API_BASE_URL}/consultations/doctor/${doctorId}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!res.ok) throw new Error('fetch failed');
+        const all = await res.json();
+
+        const usersRes = await fetch(`${API_BASE_URL}/users`, { headers: { 'Authorization': `Bearer ${token}` } });
+        const users = usersRes.ok ? await usersRes.json() : [];
+        const userMap = {};
+        users.forEach(u => userMap[u.id] = u);
+
+        document.getElementById('symptomReportsBadge').textContent = all.length;
+
+        if (all.length === 0) {
+          container.innerHTML = `<div class="info-card text-center py-4">
+            <i class="fas fa-male" style="font-size:40px; color:#ccc;"></i>
+            <p class="text-muted mt-3 mb-0">No 3D symptom reports yet. Patients can send reports from the 3D Symptom Checker.</p>
+          </div>`;
+          return;
+        }
+
+        const statusColors = { PENDING:'#ffc107', ACCEPTED:'#28a745', CONFIRMED:'#17a2b8', REJECTED:'#dc3545' };
+
+        container.innerHTML = all.map(c => {
+          const patient = userMap[c.patientId];
+          const patientName = patient ? patient.name : `Patient #${c.patientId}`;
+          const area = c.affectedArea && !c.affectedArea.includes('Click') ? c.affectedArea : '—';
+          const date = c.createdAt ? new Date(c.createdAt).toLocaleString() : '';
+          const sc = statusColors[c.status] || '#6c757d';
+          const diagnosisHtml = c.aiDiagnosis
+            ? c.aiDiagnosis.replace(/\n/g,'<br>').replace(/\*([^*]+)\*/g,'<strong>$1</strong>')
+            : '<span class="text-muted">No AI diagnosis recorded.</span>';
+
+          return `
+          <div class="info-card mb-3" style="border-left:5px solid ${sc};">
+            <div style="display:flex;justify-content:space-between;align-items:start;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
+              <div>
+                <span style="font-weight:700;color:#1e3a5f;font-size:15px;">
+                  <i class="fas fa-user me-2" style="color:#4a90e2;"></i>${escapeHtml(patientName)}
+                </span>
+                <span class="ms-2" style="background:${sc}22;color:${sc};border:1px solid ${sc}55;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;">${c.status}</span>
+              </div>
+              <small class="text-muted"><i class="fas fa-clock me-1"></i>${date}</small>
+            </div>
+            <div class="row g-2 mb-3">
+              <div class="col-sm-4">
+                <div style="background:#f0f4ff;border-radius:10px;padding:10px 14px;">
+                  <div style="font-size:11px;color:#667eea;font-weight:700;text-transform:uppercase;margin-bottom:4px;">
+                    <i class="fas fa-map-marker-alt me-1"></i>Body Area
+                  </div>
+                  <div style="font-weight:600;color:#1e3a5f;">${escapeHtml(area)}</div>
+                </div>
+              </div>
+              <div class="col-sm-8">
+                <div style="background:#f8f9fa;border-radius:10px;padding:10px 14px;">
+                  <div style="font-size:11px;color:#555;font-weight:700;text-transform:uppercase;margin-bottom:4px;">
+                    <i class="fas fa-heartbeat me-1" style="color:#f5576c;"></i>Symptoms
+                  </div>
+                  <div style="font-size:13px;color:#333;">${escapeHtml(c.symptoms || '—')}</div>
+                </div>
+              </div>
+            </div>
+            <div>
+              <div style="font-size:11px;color:#555;font-weight:700;text-transform:uppercase;margin-bottom:6px;">
+                <i class="fas fa-robot me-1" style="color:#4a90e2;"></i>AI Diagnosis
+              </div>
+              <div style="font-size:13px;color:#333;line-height:1.7;background:#f8f9fa;border-radius:10px;padding:12px 14px;max-height:180px;overflow-y:auto;">${diagnosisHtml}</div>
+            </div>
+          </div>`;
+        }).join('');
+
+      } catch (err) {
+        container.innerHTML = `<div class="alert alert-danger" style="border-radius:12px;"><i class="fas fa-exclamation-circle me-2"></i>Could not load symptom reports.</div>`;
+      }
+    }
+
+    async function loadStatistics(doctorId) {
+      try {
+        const token = localStorage.getItem('token');
+
+        // Load patients
+        const usersRes = await fetch(`${API_BASE_URL}/users`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (usersRes.ok) {
+          const users = await usersRes.json();
+          const patients = users.filter(u => u.role === 'PATIENT' && u.assignedDoctorId == doctorId);
+          document.getElementById('totalPatients').textContent = patients.length;
+        }
+
+        // Load consultations
+        const consultationsRes = await fetch(`${API_BASE_URL}/consultations/doctor/${doctorId}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (consultationsRes.ok) {
+          const consultations = await consultationsRes.json();
+          const pending = consultations.filter(c => c.status === 'PENDING').length;
+          document.getElementById('pendingConsultations').textContent = pending;
+        }
+
+        // Load reports count (placeholder)
+        // Load reports shared with this doctor
+        try {
+          const sharedRes = await fetch(`${API_BASE_URL}/reports/shared/doctor/${doctorId}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          if (sharedRes.ok) {
+            const shared = await sharedRes.json();
+            document.getElementById('totalReports').textContent = shared.length;
+            // show recent shared reports section if any
+            if (shared.length > 0) {
+              renderRecentSharedReports(shared.slice(0,3));
+            }
+          } else {
+            document.getElementById('totalReports').textContent = '0';
+          }
+        } catch (e) {
+          console.error('Error loading shared reports:', e);
+          document.getElementById('totalReports').textContent = '0';
+        }
+      } catch (error) {
+        console.error('Error loading statistics:', error);
+      }
+    }
+
+    async function loadPendingConsultations(doctorId) {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_BASE_URL}/consultations/doctor/${doctorId}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!response.ok) throw new Error('Failed to load consultations');
+
+        const consultations = await response.json();
+        const pending = consultations.filter(c => c.status === 'PENDING');
+
+        const container = document.getElementById('consultationsContainer');
+        document.getElementById('consultationBadge').textContent = pending.length;
+
+        if (pending.length === 0) {
+          container.innerHTML = `
+            <div class="col-12">
+              <div class="alert alert-info" style="border-radius: 15px; background: rgba(23,162,184,0.1); border-color: rgba(23,162,184,0.4); color: #0c5460; margin-bottom: 0;">
+                <i class="fas fa-check-circle me-2"></i>All consultations are up to date! No pending items.
+              </div>
+
+              <!-- Recent Shared Reports -->
+              <h5 class="mb-4 mt-5" style="color: #333; font-weight: 700;">
+                <i class="fas fa-file-medical me-2"></i>Recent Shared Reports
+              </h5>
+              <div class="row mb-4" id="sharedReportsContainer">
+                <div class="text-center w-100 text-muted">
+                  <p>No reports shared yet.</p>
+                </div>
+              </div>
+            </div>
+          `;
+          return;
+        }
+
+        // Get patient data for mapping
+        const usersRes = await fetch(`${API_BASE_URL}/users`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const users = usersRes.ok ? await usersRes.json() : [];
+        const userMap = {};
+        users.forEach(u => userMap[u.id] = u);
+
+        container.innerHTML = pending.map((consultation, idx) => {
+          const patient = userMap[consultation.patientId];
+          const patientName = patient ? patient.name : `Patient #${consultation.patientId}`;
+          const symptoms = consultation.symptoms ? consultation.symptoms.split(',').slice(0, 2).map(s => s.trim()).join(', ') : 'N/A';
+          const affectedArea = consultation.affectedArea || 'Not specified';
+
+          return `
+            <div class="col-md-6 mb-4" style="animation: fadeInUp 0.6s ease ${0.1 * idx}s both;">
+              <div class="feature-card" style="background: rgba(255,255,255,0.95); border-left: 5px solid #f5576c; cursor: pointer; height: 100%;" onclick="viewConsultationDetails(${consultation.id}, event)">
+                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 15px;">
+                  <div>
+                    <h6 class="mb-1" style="color: #1e3a5f; font-weight: 700;">
+                      <i class="fas fa-user me-2" style="color: #4a90e2;"></i>${patientName}
+                    </h6>
+                    <small class="text-muted">ID: ${consultation.patientId}</small>
+                  </div>
+                  <span class="badge bg-warning" style="padding: 8px 12px; font-size: 11px;">PENDING</span>
+                </div>
+                
+                <div style="margin-bottom: 12px;">
+                  <small class="text-muted d-block mb-2">
+                    <i class="fas fa-heartbeat me-1" style="color: #f5576c;"></i><strong>Symptoms:</strong>
+                  </small>
+                  <p class="mb-2" style="font-size: 13px; color: #555;">🔹 ${symptoms}</p>
+                </div>
+
+                <div style="margin-bottom: 12px;">
+                  <small class="text-muted d-block mb-2">
+                    <i class="fas fa-map-marker-alt me-1" style="color: #667eea;"></i><strong>Affected Area:</strong>
+                  </small>
+                  <p class="mb-0" style="font-size: 13px; color: #555;">📍 ${affectedArea}</p>
+                </div>
+
+                <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #e9ecef;">
+                  <small class="text-muted d-block">
+                    <i class="fas fa-calendar me-1"></i>${new Date(consultation.createdAt).toLocaleDateString()} at ${new Date(consultation.createdAt).toLocaleTimeString()}
+                  </small>
+                </div>
+
+                <div style="margin-top: 15px; display: flex; gap: 10px;">
+                  <button class="btn btn-sm btn-outline-success" onclick="acceptConsultationQuick(${consultation.id}, event)">
+                    <i class="fas fa-check me-1"></i>Accept
+                  </button>
+                  <button class="btn btn-sm btn-outline-primary" onclick="confirmConsultationQuick(${consultation.id}, event)">
+                    <i class="fas fa-check-double me-1"></i>Confirm
+                  </button>
+                  <button class="btn btn-sm btn-outline-danger" onclick="rejectConsultationQuick(${consultation.id}, event)">
+                    <i class="fas fa-times me-1"></i>Reject
+                  </button>
+                  <button class="btn btn-sm btn-outline-primary" onclick="viewConsultationDetailsModal(${consultation.id}, event)">
+                    <i class="fas fa-eye me-1"></i>Details
+                  </button>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      } catch (error) {
+        console.error('Error loading consultations:', error);
+        document.getElementById('consultationsContainer').innerHTML = `
+          <div class="col-12">
+            <div class="alert alert-danger" style="border-radius: 15px;">
+              <i class="fas fa-exclamation-circle me-2"></i>Error loading consultations
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    function viewConsultationDetails(consultationId, event) {
+      event.preventDefault();
+      event.stopPropagation();
+      viewConsultationDetailsModal(consultationId, event);
+    }
+
+    async function viewConsultationDetailsModal(consultationId, event) {
+      if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_BASE_URL}/consultations/${consultationId}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!response.ok) throw new Error('Failed to load consultation details');
+
+        currentConsultationData = await response.json();
+        currentConsultationId = consultationId;
+
+        // Get patient info
+        const usersRes = await fetch(`${API_BASE_URL}/users`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const users = usersRes.ok ? await usersRes.json() : [];
+        const patient = users.find(u => u.id === currentConsultationData.patientId);
+
+        const modalContent = document.getElementById('modalContent');
+        modalContent.innerHTML = `
+          <div style="margin-bottom: 20px;">
+            <h6 style="color: #1e3a5f; font-weight: 700; margin-bottom: 15px;">Patient Information</h6>
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 10px; margin-bottom: 15px;">
+              <p class="mb-2"><strong>Name:</strong> ${patient ? patient.name : 'N/A'}</p>
+              <p class="mb-2"><strong>Email:</strong> ${patient ? patient.email : 'N/A'}</p>
+              <p class="mb-0"><strong>Patient ID:</strong> ${currentConsultationData.patientId}</p>
+            </div>
+          </div>
+
+          <div style="margin-bottom: 20px;">
+            <h6 style="color: #1e3a5f; font-weight: 700; margin-bottom: 15px;">Consultation Details</h6>
+            <div style="background: #fff3cd; padding: 15px; border-radius: 10px; margin-bottom: 15px; border-left: 4px solid #ffc107;">
+              <p class="mb-2"><strong><i class="fas fa-heartbeat me-2" style="color: #f5576c;"></i>Symptoms:</strong></p>
+              <p class="mb-0">${currentConsultationData.symptoms || 'Not specified'}</p>
+            </div>
+
+            <div style="background: #e7f3ff; padding: 15px; border-radius: 10px; margin-bottom: 15px; border-left: 4px solid #4a90e2;">
+              <p class="mb-2"><strong><i class="fas fa-map-marker-alt me-2" style="color: #4a90e2;"></i>Affected Area:</strong></p>
+              <p class="mb-0">${currentConsultationData.affectedArea || 'Not specified'}</p>
+            </div>
+
+            <div style="background: #f0f0f0; padding: 15px; border-radius: 10px;">
+              <p class="mb-2"><strong><i class="fas fa-robot me-2" style="color: #667eea;"></i>AI Diagnosis:</strong></p>
+              <p class="mb-0">${currentConsultationData.aiDiagnosis || 'Pending analysis...'}</p>
+            </div>
+          </div>
+
+          <div style="margin-bottom: 20px;">
+            <h6 style="color: #1e3a5f; font-weight: 700; margin-bottom: 15px;">Status & Timeline</h6>
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 10px;">
+              <p class="mb-2"><strong>Status:</strong> <span class="badge bg-warning">PENDING</span></p>
+              <p class="mb-0"><strong>Submitted:</strong> ${new Date(currentConsultationData.createdAt).toLocaleString()}</p>
+            </div>
+          </div>
+        `;
+
+        const modal = new bootstrap.Modal(document.getElementById('consultationModal'));
+        modal.show();
+      } catch (error) {
+        console.error('Error loading consultation details:', error);
+        alert('Error loading consultation details');
+      }
+    }
+
+    async function acceptConsultation() {
+      if (!currentConsultationId) return;
+      await updateConsultationStatus(currentConsultationId, 'ACCEPTED');
+    }
+
+    async function rejectConsultation() {
+      if (!currentConsultationId) return;
+      await updateConsultationStatus(currentConsultationId, 'REJECTED');
+    }
+
+    async function acceptConsultationQuick(consultationId, event) {
+      event.preventDefault();
+      event.stopPropagation();
+      await updateConsultationStatus(consultationId, 'ACCEPTED');
+    }
+
+    async function rejectConsultationQuick(consultationId, event) {
+      event.preventDefault();
+      event.stopPropagation();
+      await updateConsultationStatus(consultationId, 'REJECTED');
+    }
+
+    async function confirmConsultation() {
+      if (!currentConsultationId) return;
+      await updateConsultationStatus(currentConsultationId, 'CONFIRMED');
+    }
+
+    async function confirmConsultationQuick(consultationId, event) {
+      event.preventDefault();
+      event.stopPropagation();
+      await updateConsultationStatus(consultationId, 'CONFIRMED');
+    }
+
+    async function updateConsultationStatus(consultationId, status) {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_BASE_URL}/consultations/${consultationId}/status`, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ status })
+        });
+
+        if (!response.ok) throw new Error('Failed to update consultation');
+
+        // Close modal if open
+        const modal = bootstrap.Modal.getInstance(document.getElementById('consultationModal'));
+        if (modal) modal.hide();
+
+        // Show success message
+        let statusText = 'updated';
+        let alertClass = 'info';
+        let icon = 'info-circle';
+        if (status === 'ACCEPTED') {
+          statusText = 'accepted';
+          alertClass = 'success';
+          icon = 'check-circle';
+        } else if (status === 'REJECTED') {
+          statusText = 'rejected';
+          alertClass = 'danger';
+          icon = 'times-circle';
+        } else if (status === 'CONFIRMED') {
+          statusText = 'confirmed';
+          alertClass = 'success';
+          icon = 'check-double';
+        }
+
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${alertClass} alert-dismissible fade show`;
+        alertDiv.style.position = 'fixed';
+        alertDiv.style.top = '20px';
+        alertDiv.style.right = '20px';
+        alertDiv.style.zIndex = '9999';
+        alertDiv.innerHTML = `
+          <i class="fas fa-${icon} me-2"></i>
+          Consultation ${statusText} successfully!
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        document.body.appendChild(alertDiv);
+
+        setTimeout(() => alertDiv.remove(), 4000);
+
+        // Reload consultations
+        const userId = localStorage.getItem('userId');
+        if (userId) {
+          loadStatistics(userId);
+          loadPendingConsultations(userId);
+        }
+      } catch (error) {
+        console.error('Error updating consultation:', error);
+        alert('Error updating consultation status');
+      }
+    }
+
+    function logout() {
+      if (confirm('Are you sure you want to logout?')) {
+        localStorage.clear();
+        window.location.href = 'login.html';
+      }
+    }
+  </script>
+  <script>
+    // sidebar toggle for small screens
+    document.addEventListener('DOMContentLoaded', () => {
+      const toggle = document.getElementById('sidebarToggle');
+      const sidebar = document.querySelector('.sidebar');
+      if (toggle && sidebar) toggle.addEventListener('click', () => sidebar.classList.toggle('collapsed'));
+
+      // simple stat number pop animation
+      document.querySelectorAll('.stat-number').forEach(el => {
+        // add pop class after a short delay
+        setTimeout(() => el.classList.add('pop'), 300);
+      });
+    });
+  </script>
+  <!-- lang.js removed -->
+  <script src="theme.js"></script>
+</body>
+</html>

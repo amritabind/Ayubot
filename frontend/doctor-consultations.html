@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AyuBot - Consultations</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+  <script src="config.js"></script>
+  <style>
+    :root {
+      --sidebar-bg: #1e3a5f;
+      --card-bg: white;
+      --text-primary: #333;
+    }
+    body {
+      background: var(--bg-secondary, #f4f7fa);
+      min-height: 100vh;
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+    }
+    .sidebar {
+      width: 280px;
+      background: var(--sidebar-bg);
+      position: fixed;
+      height: 100vh;
+      left: 0;
+      top: 0;
+      padding: 30px 0;
+      box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+    }
+    .sidebar-brand {
+      font-size: 28px;
+      font-weight: 900;
+      color: white;
+      padding: 0 30px;
+      margin-bottom: 40px;
+    }
+    .sidebar-title {
+      color: rgba(255,255,255,0.5);
+      font-size: 12px;
+      text-transform: uppercase;
+      padding: 0 30px;
+      margin-top: 30px;
+      margin-bottom: 10px;
+      font-weight: 600;
+    }
+    .nav-item {
+      padding: 15px 30px;
+      color: rgba(255,255,255,0.7);
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      text-decoration: none;
+    }
+    .nav-item:hover, .nav-item.active {
+      background: rgba(255,255,255,0.1);
+      color: white;
+    }
+    .nav-item.active {
+      border-left: 4px solid #4a90e2;
+      background: rgba(74,144,226,0.2);
+    }
+    .main-content {
+      margin-left: 280px;
+      padding: 30px;
+    }
+    .top-bar {
+      background: var(--card-bg);
+      border-radius: 15px;
+      padding: 20px 30px;
+      margin-bottom: 30px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .page-title {
+      font-size: 28px;
+      font-weight: bold;
+      color: var(--text-primary);
+      margin: 0;
+    }
+    .filter-tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .filter-tab {
+      padding: 10px 20px;
+      border-radius: 20px;
+      border: 2px solid #e0e0e0;
+      background: white;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-weight: 600;
+    }
+    .filter-tab:hover {
+      border-color: #4a90e2;
+    }
+    .filter-tab.active {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border-color: #667eea;
+    }
+    .consultation-card {
+      background: var(--card-bg);
+      border-radius: 15px;
+      padding: 25px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      border-left: 5px solid #ffc107;
+      transition: all 0.3s;
+    }
+    .consultation-card:hover {
+      transform: translateX(5px);
+      box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    }
+    .consultation-card.pending { border-left-color: #ffc107; }
+    .consultation-card.in-progress { border-left-color: #17a2b8; }
+    .consultation-card.completed { border-left-color: #28a745; }
+    .status-badge {
+      padding: 5px 15px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: bold;
+    }
+    .status-pending { background: #ffc107; color: #000; }
+    .status-in_progress { background: #17a2b8; color: white; }
+    .status-completed { background: #28a745; color: white; }
+    .btn-update {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      padding: 10px 25px;
+      border-radius: 10px;
+      font-weight: 600;
+      transition: all 0.3s;
+    }
+    .btn-update:hover {
+      transform: scale(1.05);
+      box-shadow: 0 5px 15px rgba(102,126,234,0.4);
+    }
+  </style>
+</head>
+<body>
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-brand">
+      <i class="fas fa-robot"></i> AyuBot
+    </div>
+    <div class="sidebar-title">Navigation</div>
+    <a href="doctor-dashboard.html" class="nav-item">
+      <i class="fas fa-home"></i>
+      <span>Dashboard</span>
+    </a>
+    <a href="doctor-patients.html" class="nav-item">
+      <i class="fas fa-users"></i>
+      <span>My Patients</span>
+    </a>
+    <a href="doctor-consultations.html" class="nav-item active">
+      <i class="fas fa-stethoscope"></i>
+      <span>Consultations</span>
+    </a>
+    <!-- Patient Reports removed -->
+    <div class="sidebar-title">Account</div>
+    <a href="#" onclick="logout()" class="nav-item">
+      <i class="fas fa-sign-out-alt"></i>
+      <span>Logout</span>
+    </a>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <div class="top-bar">
+      <h1 class="page-title"><i class="fas fa-stethoscope me-2"></i>Consultations</h1>
+      <div class="d-flex align-items-center gap-3">
+        <span><i class="fas fa-user-md me-2"></i><strong id="doctorName">Dr. Demo Doctor</strong></span>
+        <button onclick="logout()" class="btn btn-outline-danger btn-sm">
+          <i class="fas fa-power-off me-1"></i>Logout
+        </button>
+      </div>
+    </div>
+
+    <!-- Filter Tabs -->
+    <div class="filter-tabs">
+      <button class="filter-tab active" onclick="filterConsultations('all')">
+        <i class="fas fa-list me-1"></i>All
+      </button>
+      <button class="filter-tab" onclick="filterConsultations('PENDING')">
+        <i class="fas fa-clock me-1"></i>Pending
+      </button>
+      <button class="filter-tab" onclick="filterConsultations('IN_PROGRESS')">
+        <i class="fas fa-spinner me-1"></i>In Progress
+      </button>
+      <button class="filter-tab" onclick="filterConsultations('COMPLETED')">
+        <i class="fas fa-check-circle me-1"></i>Completed
+      </button>
+    </div>
+
+    <!-- Consultations List -->
+    <div id="consultationsList">
+      <div class="text-center py-5">
+        <div class="spinner-border text-primary" role="status"></div>
+        <p class="mt-3 text-muted">Loading consultations...</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Update Consultation Modal -->
+  <div class="modal fade" id="updateModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content" style="border-radius: 20px;">
+        <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+          <h5 class="modal-title">Update Consultation</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="updateForm">
+            <input type="hidden" id="consultationId">
+            
+            <div class="mb-3">
+              <h6><i class="fas fa-calendar-alt me-2"></i>Date:</h6>
+              <p id="modalDate"></p>
+            </div>
+
+            <div class="mb-3">
+              <h6><i class="fas fa-user me-2"></i>Patient:</h6>
+              <p id="modalPatient"></p>
+            </div>
+
+            <div class="mb-3">
+              <h6><i class="fas fa-map-marker-alt me-2"></i>Affected Area:</h6>
+              <p id="modalAffectedArea"></p>
+            </div>
+
+            <div class="mb-3">
+              <h6><i class="fas fa-notes-medical me-2"></i>Patient's Symptoms:</h6>
+              <div class="p-3 bg-light rounded" id="modalSymptoms"></div>
+            </div>
+
+            <div class="mb-3">
+              <h6><i class="fas fa-robot me-2"></i>AI Preliminary Diagnosis:</h6>
+              <div class="p-3 bg-info bg-opacity-10 rounded" style="border-left: 4px solid #17a2b8;" id="modalAIDiagnosis"></div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label"><strong>Doctor's Notes</strong></label>
+              <textarea class="form-control" id="doctorNotes" rows="5" placeholder="Enter your professional assessment and notes..."></textarea>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label"><strong>Prescription</strong></label>
+              <textarea class="form-control" id="prescription" rows="5" placeholder="Enter prescription and treatment plan..."></textarea>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label"><strong>Status</strong></label>
+              <select class="form-select" id="status">
+                <option value="PENDING">Pending</option>
+                <option value="IN_PROGRESS">In Progress</option>
+                <option value="COMPLETED">Completed</option>
+              </select>
+            </div>
+
+            <div class="d-flex gap-2">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+              <button type="submit" class="btn btn-success flex-fill">
+                <i class="fas fa-save me-2"></i>Save Changes
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const API_BASE_URL = API_CONFIG.getApiUrl();
+    let allConsultations = [];
+    let updateModal;
+    let patientNames = {};
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const token = localStorage.getItem('token');
+      const userRole = localStorage.getItem('userRole');
+      const doctorName = localStorage.getItem('userName');
+      const userId = localStorage.getItem('userId');
+
+      if (!token || userRole !== 'DOCTOR') {
+        window.location.href = 'login.html';
+        return;
+      }
+
+      if (doctorName) {
+        document.getElementById('doctorName').textContent = doctorName;
+      }
+
+      updateModal = new bootstrap.Modal(document.getElementById('updateModal'));
+      
+      if (userId) {
+        loadConsultations(userId);
+        loadPatientNames();
+      }
+    });
+
+    async function loadPatientNames() {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_BASE_URL}/users`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (response.ok) {
+          const users = await response.json();
+          users.forEach(user => {
+            patientNames[user.id] = user.name;
+          });
+        }
+      } catch (error) {
+        console.error('Error loading patient names:', error);
+      }
+    }
+
+    async function loadConsultations(doctorId) {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_BASE_URL}/consultations/doctor/${doctorId}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!response.ok) throw new Error('Failed to load consultations');
+
+        allConsultations = await response.json();
+        displayConsultations(allConsultations);
+      } catch (error) {
+        console.error('Error loading consultations:', error);
+        document.getElementById('consultationsList').innerHTML = `
+          <div class="alert alert-danger">Error loading consultations. Please try again later.</div>
+        `;
+      }
+    }
+
+    function displayConsultations(consultations) {
+      const listDiv = document.getElementById('consultationsList');
+
+      if (consultations.length === 0) {
+        listDiv.innerHTML = `
+          <div class="text-center py-5">
+            <i class="fas fa-clipboard fa-5x text-muted mb-3"></i>
+            <h4>No Consultations Yet</h4>
+            <p class="text-muted">Consultations from your patients will appear here</p>
+          </div>
+        `;
+        return;
+      }
+
+      listDiv.innerHTML = consultations.map(c => {
+        const date = new Date(c.createdAt).toLocaleDateString('en-US', {
+          weekday: 'short',
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+
+        const statusClass = `status-${c.status.toLowerCase()}`;
+        const cardClass = c.status.toLowerCase().replace('_', '-');
+        const patientName = patientNames[c.patientId] || `Patient #${c.patientId}`;
+
+        const lastUpdated = c.updatedAt ? new Date(c.updatedAt).toLocaleString() : 'N/A';
+
+        return `
+          <div class="consultation-card ${cardClass}">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+              <div class="flex-grow-1">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                  <h5 class="mb-0">
+                    <i class="fas fa-user-circle me-2"></i>${patientName}
+                  </h5>
+                  <span class="status-badge ${statusClass}">${c.status}</span>
+                </div>
+                <p class="text-muted mb-2">
+                  <i class="fas fa-calendar me-2"></i>${date}
+                </p>
+                ${c.affectedArea ? `<p class="mb-2"><strong><i class="fas fa-map-marker-alt me-2"></i>Body Part:</strong> ${c.affectedArea}</p>` : ''}
+              </div>
+              <button onclick="openUpdateModal(${c.id})" class="btn-update">
+                <i class="fas fa-edit me-2"></i>Update
+              </button>
+            </div>
+
+            <div class="mb-3">
+              <strong><i class="fas fa-notes-medical me-2"></i>Symptoms:</strong>
+              <p class="mb-0">${c.symptoms.substring(0, 200)}${c.symptoms.length > 200 ? '...' : ''}</p>
+            </div>
+
+            ${c.doctorNotes ? `
+              <div class="mb-2">
+                <strong><i class="fas fa-user-md me-2"></i>Your Notes:</strong>
+                <p class="mb-0 text-success">${c.doctorNotes.substring(0, 150)}...</p>
+              </div>
+            ` : '<p class="text-muted small"><i class="fas fa-exclamation-circle me-2"></i>No notes added yet</p>'}
+
+            <p class="text-muted small mb-0">
+              <i class="fas fa-clock me-1"></i>Last updated: ${lastUpdated}
+            </p>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function filterConsultations(status) {
+      // Update active tab
+      document.querySelectorAll('.filter-tab').forEach(tab => tab.classList.remove('active'));
+      event.target.classList.add('active');
+
+      // Filter consultations
+      const filtered = status === 'all' 
+        ? allConsultations 
+        : allConsultations.filter(c => c.status === status);
+      
+      displayConsultations(filtered);
+    }
+
+    function openUpdateModal(consultationId) {
+      const consultation = allConsultations.find(c => c.id === consultationId);
+      if (!consultation) return;
+
+      const date = new Date(consultation.createdAt).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+
+      const patientName = patientNames[consultation.patientId] || `Patient #${consultation.patientId}`;
+
+      document.getElementById('consultationId').value = consultation.id;
+      document.getElementById('modalDate').textContent = date;
+      document.getElementById('modalPatient').textContent = patientName;
+      document.getElementById('modalAffectedArea').textContent = consultation.affectedArea || 'Not specified';
+      document.getElementById('modalSymptoms').textContent = consultation.symptoms;
+      document.getElementById('modalAIDiagnosis').innerHTML = consultation.aiDiagnosis ? consultation.aiDiagnosis.replace(/\n/g, '<br>') : 'Not available';
+      document.getElementById('doctorNotes').value = consultation.doctorNotes || '';
+      document.getElementById('prescription').value = consultation.prescription || '';
+      document.getElementById('status').value = consultation.status;
+
+      updateModal.show();
+    }
+
+    document.getElementById('updateForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const consultationId = document.getElementById('consultationId').value;
+      const token = localStorage.getItem('token');
+
+      const updateData = {
+        doctorNotes: document.getElementById('doctorNotes').value,
+        prescription: document.getElementById('prescription').value,
+        status: document.getElementById('status').value
+      };
+
+      try {
+        const consultation = allConsultations.find(c => c.id == consultationId);
+        const updatedConsultation = { ...consultation, ...updateData };
+
+        const response = await fetch(`${API_BASE_URL}/consultations/${consultationId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(updatedConsultation)
+        });
+
+        if (response.ok) {
+          updateModal.hide();
+          
+          const successAlert = document.createElement('div');
+          successAlert.className = 'alert alert-success alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3';
+          successAlert.style.zIndex = '9999';
+          successAlert.innerHTML = `
+            <i class="fas fa-check-circle me-2"></i>Consultation updated successfully!
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          `;
+          document.body.appendChild(successAlert);
+          setTimeout(() => successAlert.remove(), 3000);
+
+          // Reload consultations
+          const userId = localStorage.getItem('userId');
+          loadConsultations(userId);
+        } else {
+          alert('Failed to update consultation. Please try again.');
+        }
+      } catch (error) {
+        console.error('Error updating consultation:', error);
+        alert('Error updating consultation. Please try again.');
+      }
+    });
+
+    function logout() {
+      if (confirm('Are you sure you want to logout?')) {
+        localStorage.clear();
+        window.location.href = 'login.html';
+      }
+    }
+  </script>
+  <!-- lang.js removed -->
+  <script src="theme.js"></script>
+</body>
+</html>

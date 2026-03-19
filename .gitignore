@@ -1,0 +1,111 @@
+# Frontend
+node_modules/
+dist/
+build/
+.env.local
+.env*.local
+.yarn
+.pnp
+*.pnp.js
+
+# Backend
+target/
+.mvn/wrapper/maven-wrapper.jar
+*.jar
+!.mvn/wrapper/maven-wrapper.jar
+out/
+.gradle/
+*.class
+*.log
+*.jar
+*.war
+*.zip
+*.tar.gz
+*.rar
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+*.iml
+*.iws
+*.ipr
+.classpath
+.project
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+
+# Database
+*.sql.bak
+database/
+*.db
+*.sqlite
+*.sqlite3
+
+# Environment
+.env
+.env.local
+.env.production.local
+.env.development.local
+.env.test.local
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.bak~
+*.swp
+
+# OS
+Thumbs.db
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Coverage
+coverage/
+.nyc_output/
+
+# Node / NPM
+package-lock.json
+yarn.lock
+
+# Maven
+.mvn/
+mvnw
+mvnw.cmd
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+
+# Build outputs
+*.war
+*.ear
+dist/
+build/
+target/
+
+# Testing
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Config with secrets
+application-prod.properties
+config-secrets.js
+.secrets

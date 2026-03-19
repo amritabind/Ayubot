@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AyuBot - Patient Dashboard</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+  <link href="enhanced-styles.css" rel="stylesheet"/>
+  <link rel="stylesheet" href="vendor/leaflet/leaflet.css"/>
+  <script src="config.js"></script>
+  <style>
+    #map { width: 100%; height: 420px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.12); }
+    @keyframes gradient-bg {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    @keyframes particle-float {
+      0%, 100% { transform: translateY(0) translateX(0); }
+      33% { transform: translateY(-20px) translateX(10px); }
+      66% { transform: translateY(-10px) translateX(-10px); }
+    }
+
+    body { 
+      background: linear-gradient(-45deg, #667eea, #764ba2, #f093fb, #4facfe); 
+      background-size: 400% 400%;
+      animation: gradient-bg 15s ease infinite;
+      min-height: 100vh; 
+      font-family: 'Segoe UI', sans-serif;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    body::before, body::after {
+      content: '';
+      position: fixed;
+      width: 400px;
+      height: 400px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 50%;
+      z-index: 0;
+      animation: particle-float 8s ease-in-out infinite;
+    }
+
+    body::before {
+      top: -200px;
+      right: -200px;
+    }
+
+    body::after {
+      bottom: -200px;
+      left: -200px;
+      animation-delay: 4s;
+    }
+
+    .navbar { 
+      background: rgba(0,0,0,0.3); 
+      backdrop-filter: blur(15px);
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      box-shadow: 0 5px 30px rgba(0,0,0,0.1);
+    }
+
+    .card { 
+      transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      border: none; 
+      border-radius: 25px; 
+      box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+      height: 100%;
+      background: white;
+      cursor: pointer;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+      transition: left 0.5s;
+    }
+
+    .card:hover::before {
+      left: 100%;
+    }
+
+    .card:hover { 
+      transform: translateY(-20px) scale(1.03); 
+      box-shadow: 0 25px 60px rgba(102,126,234,0.4);
+    }
+
+    .card i { 
+      font-size: 4rem; 
+      margin-bottom: 20px; 
+      background: linear-gradient(45deg, #667eea, #764ba2); 
+      -webkit-background-clip: text; 
+      -webkit-text-fill-color: transparent;
+      transition: transform 0.3s;
+    }
+
+    .card:hover i {
+      transform: scale(1.15) rotate(5deg);
+    }
+
+    .card-title { 
+      font-weight: 700; 
+      color: #333;
+      transition: color 0.3s;
+    }
+
+    .card:hover .card-title {
+      background: linear-gradient(45deg, #667eea, #764ba2); 
+      -webkit-background-clip: text; 
+      -webkit-text-fill-color: transparent;
+    }
+
+    .badge { 
+      font-size: 0.85rem; 
+      padding: 8px 16px; 
+      border-radius: 50px;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    footer { 
+      background: rgba(0,0,0,0.5); 
+      backdrop-filter: blur(10px);
+      color: white; 
+      padding: 25px 0; 
+      margin-top: 100px;
+      position: relative;
+      z-index: 10;
+    }
+
+    .hero-title {
+      animation: fadeInUp 0.8s ease;
+      text-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+
+    .hero-subtitle {
+      animation: fadeInUp 1s ease 0.2s both;
+    }
+
+    .hero-badge {
+      animation: fadeInUp 1.2s ease 0.4s both;
+    }
+
+    .doctor-card {
+      background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.98) 100%);
+      animation: fadeInUp 0.8s ease 0.3s both;
+    }
+
+    .feature-card-1 { animation: fadeInUp 0.8s ease 0.4s both; }
+    .feature-card-2 { animation: fadeInUp 0.8s ease 0.5s both; }
+    .feature-card-3 { animation: fadeInUp 0.8s ease 0.6s both; }
+    .feature-card-4 { animation: fadeInUp 0.8s ease 0.7s both; }
+    .feature-card-5 { animation: fadeInUp 0.8s ease 0.8s both; }
+    .feature-card-6 { animation: fadeInUp 0.8s ease 0.9s both; }
+    .feature-card-7 { animation: fadeInUp 0.8s ease 1s both; }
+
+    .container { position: relative; z-index: 10; }
+
+    .objective-box {
+      animation: fadeInUp 1s ease 1.1s both;
+      backdrop-filter: blur(10px);
+      background: rgba(255,255,255,0.95);
+    }
+  </style>
+</head>
+<body>
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+    <div class="container">
+      <a class="navbar-brand fw-bold fs-3 animate-slide-left" href="patient-dashboard.html">
+        <i class="fas fa-robot me-2"></i>AyuBot
+      </a>
+      <div class="ms-auto d-flex align-items-center">
+        <span class="text-white me-3">
+          <i class="fas fa-user-circle me-2"></i>
+          <strong id="userName">Welcome, Patient</strong>
+        </span>
+        <button onclick="logout()" class="btn btn-outline-light btn-sm btn-enhanced ripple">
+          <i class="fas fa-sign-out-alt me-1"></i>Logout
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container" style="margin-top: 100px; padding-bottom: 50px;">
+    <div class="text-center text-white mb-5">
+      <h1 class="display-3 fw-bold hero-title">Welcome to AyuBot</h1>
+      <p class="lead fs-3 hero-subtitle">Your Personal AI-Powered Medical Assistant</p>
+      <span class="badge bg-light text-dark fs-6 hero-badge">
+        <i class="fas fa-star me-2"></i>Developed by: Amrita Bind & Bhagyashree Kalshetty
+      </span>
+    </div>
+
+    <!-- Assigned Doctor Section -->
+    <div class="row g-5 mb-5">
+      <div class="col-lg-12">
+        <div class="card p-5 doctor-card">
+          <div class="text-center">
+            <div class="animate-float">
+              <i class="fas fa-user-md" style="font-size: 4rem; color: #667eea;"></i>
+            </div>
+            <h4 class="mt-4 mb-4 gradient-text">Your Assigned Doctor</h4>
+            <div id="assignedDoctorInfo">
+              <div class="spinner-enhanced mx-auto"></div>
+            </div>
+            <button onclick="openDoctorModal()" class="btn btn-primary btn-lg mt-3 btn-enhanced ripple">
+              <i class="fas fa-exchange-alt me-2"></i>Change Doctor
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Features -->
+    <div class="row g-5 mb-5">
+      <!-- 3D Symptom Checker -->
+      <div class="col-lg-4 feature-card-1">
+        <div class="card text-center p-5 icon-spin-hover" onclick="location.href='symptom-3d.html'">
+          <i class="fas fa-male"></i>
+          <h3 class="card-title">3D Symptom Checker</h3>
+          <p class="text-muted">Click on any body part to describe your symptoms</p>
+          <span class="badge bg-primary">
+            <i class="fas fa-cube me-1"></i>Interactive 3D Model
+          </span>
+        </div>
+      </div>
+
+      <!-- AI Chat Doctor -->
+      <div class="col-lg-4 feature-card-2">
+        <div class="card text-center p-5 icon-spin-hover" onclick="location.href='chatbot.html'">
+          <i class="fas fa-comments"></i>
+          <h3 class="card-title">AI Chat Doctor</h3>
+          <p class="text-muted">Ask any health question in natural language</p>
+          <span class="badge bg-success">
+            <i class="fas fa-bolt me-1"></i>Instant Response
+          </span>
+        </div>
+      </div>
+
+      <!-- Upload Report -->
+      <div class="col-lg-4 feature-card-3">
+        <div class="card text-center p-5 icon-spin-hover" onclick="location.href='upload-report.html'">
+          <i class="fas fa-file-medical"></i>
+          <h3 class="card-title">Upload Report</h3>
+          <p class="text-muted">Blood test • X-ray • MRI • Prescription</p>
+          <span class="badge bg-warning text-dark">
+            <i class="fas fa-magic me-1"></i>AI Reads Instantly!
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Additional Features -->
+    <div class="row g-5 mb-5">
+      <div class="col-lg-3 feature-card-4">
+        <div class="card text-center p-4 icon-spin-hover" onclick="location.href='patient-reports.html'">
+          <i class="fas fa-folder-open" style="font-size: 3.5rem; margin-bottom: 15px; background: linear-gradient(45deg, #f093fb, #f5576c); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"></i>
+          <h5 class="card-title">My Reports</h5>
+          <p class="text-muted small">View and manage all your medical documents</p>
+          <span class="badge bg-primary">
+            <i class="fas fa-file-alt me-1"></i>Reports History
+          </span>
+        </div>
+      </div>
+
+      <div class="col-lg-3 feature-card-5">
+        <div class="card text-center p-4 icon-spin-hover" onclick="location.href='patient-consultations.html'">
+          <i class="fas fa-stethoscope" style="font-size: 3.5rem; margin-bottom: 15px; color: #17a2b8;"></i>
+          <h5 class="card-title">Consultations</h5>
+          <p class="text-muted small">View consultations and prescriptions</p>
+          <span class="badge bg-success">
+            <i class="fas fa-notes-medical me-1"></i>Medical History
+          </span>
+        </div>
+      </div>
+
+      <div class="col-lg-3 feature-card-6">
+        <div class="card text-center p-4 icon-spin-hover" onclick="openAppointmentModal()">
+          <i class="fas fa-calendar-check" style="font-size: 3.5rem; margin-bottom: 15px; color: #ff6b6b;"></i>
+          <h5 class="card-title">Appointments</h5>
+          <p class="text-muted small">Schedule consultation with your doctor</p>
+          <span class="badge bg-primary">
+            <i class="fas fa-clock me-1"></i>Quick Booking
+          </span>
+        </div>
+      </div>
+
+      <div class="col-lg-3 feature-card-7">
+        <div class="card text-center p-4 icon-spin-hover" onclick="location.href='patient-profile.html'">
+          <i class="fas fa-user-edit" style="font-size: 3.5rem; margin-bottom: 15px; color: #9b59b6;"></i>
+          <h5 class="card-title">My Profile</h5>
+          <p class="text-muted small">Update medical and personal details</p>
+          <span class="badge bg-secondary">
+            <i class="fas fa-cog me-1"></i>Manage Profile
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Nearby Hospitals Map -->
+    <div class="row g-5 mb-5">
+      <div class="col-lg-12">
+        <div class="card p-4 objective-box">
+          <h4 class="mb-3">Nearby Hospitals</h4>
+          <p class="text-muted small">Allow location access to show hospitals near you (powered by OpenStreetMap / Overpass). If location is denied, enter a place manually.</p>
+          <div class="d-flex gap-2 mb-3 align-items-center">
+            <input id="locationInput" class="form-control" placeholder="Enter city, address or postal code" aria-label="Location search" />
+            <button id="searchLocationBtn" class="btn btn-primary">Find</button>
+            <button id="useLocationBtn" class="btn btn-outline-secondary">Use my location</button>
+          </div>
+          <div id="map"></div>
+        </div>
+      </div>
+    </div>
+
+    
+  </div>
+
+  <footer class="text-center">
+    <p class="mb-0">
+      <strong>AyuBot</strong> — AI-Powered Medical Diagnosis System<br>
+    </p>
+  </footer>
+
+  <!-- Doctor Assignment Modal -->
+  <div class="modal fade" id="doctorModal" tabindex="-1" aria-labelledby="doctorModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content" style="border-radius: 20px;">
+        <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 20px 20px 0 0;">
+          <h5 class="modal-title" id="doctorModalLabel">
+            <i class="fas fa-user-md me-2"></i>Assign Your Doctor
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-4">
+          <p class="text-muted mb-4">Select a doctor to be assigned to your medical care</p>
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label class="form-label">Filter by specialty</label>
+              <select id="specialtyFilter" class="form-select" onchange="applySpecialtyFilter()">
+                <option value="">All specialties</option>
+              </select>
+            </div>
+          </div>
+          <div id="doctorsList">
+            <div class="text-center">
+              <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+              </div>
+              <p class="mt-2">Loading doctors...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Book Appointment Modal -->
+  <div class="modal fade" id="appointmentModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content" style="border-radius: 20px;">
+        <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 20px 20px 0 0;">
+          <h5 class="modal-title">
+            <i class="fas fa-calendar-plus me-2"></i>Book Appointment
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body p-4">
+          <form id="appointmentForm">
+            <div class="mb-3">
+              <label class="form-label"><i class="fas fa-user-md me-2"></i>Select Doctor</label>
+              <input type="text" class="form-control" id="appointmentDoctor" readonly style="background: #f8f9fa; cursor: not-allowed;">
+            </div>
+            <div class="mb-3">
+              <label class="form-label"><i class="fas fa-calendar me-2"></i>Appointment Date & Time</label>
+              <input type="datetime-local" class="form-control" id="appointmentDate" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label"><i class="fas fa-clipboard-list me-2"></i>Appointment Type</label>
+              <select class="form-control" id="appointmentType" required>
+                <option value="Consultation">Consultation</option>
+                <option value="Follow-up">Follow-up</option>
+                <option value="Check-up">Check-up</option>
+                <option value="Emergency">Emergency</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label"><i class="fas fa-notes-medical me-2"></i>Reason for Visit</label>
+              <textarea class="form-control" id="appointmentReason" rows="3" placeholder="Describe your symptoms or reason for the appointment..." required></textarea>
+            </div>
+            <div class="d-flex gap-2">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+              <button type="submit" class="btn btn-primary flex-fill">
+                <i class="fas fa-check me-2"></i>Book Appointment
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const API_BASE_URL = API_CONFIG.getApiUrl();
+    let doctorModal;
+    let appointmentModal;
+    let assignedDoctorId = null;
+    let assignedDoctorName = '';
+    let doctorsCache = [];
+
+    // Load user information and assigned doctor
+    window.addEventListener('DOMContentLoaded', () => {
+      const userName = localStorage.getItem('userName');
+      const token = localStorage.getItem('token');
+      const userId = localStorage.getItem('userId');
+      
+      if (!token) {
+        window.location.href = 'login.html';
+        return;
+      }
+      
+      if (userName) {
+        document.getElementById('userName').textContent = `Welcome, ${userName}`;
+      }
+
+      // Initialize modals
+      doctorModal = new bootstrap.Modal(document.getElementById('doctorModal'));
+      appointmentModal = new bootstrap.Modal(document.getElementById('appointmentModal'));
+
+      // Load assigned doctor
+      if (userId) {
+        loadAssignedDoctor(userId);
+      }
+      // Initialize nearby hospitals map (will be invoked after Leaflet script loads)
+    });
+
+    // Load assigned doctor information
+    async function loadAssignedDoctor(patientId) {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_BASE_URL}/patients/${patientId}/assigned-doctor`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        const doctorInfo = document.getElementById('assignedDoctorInfo');
+        
+        if (response.ok) {
+          const doctor = await response.json();
+          assignedDoctorId = doctor.id;
+          assignedDoctorName = doctor.name;
+          doctorInfo.innerHTML = `
+            <h3 class="text-primary mb-2">Dr. ${doctor.name}</h3>
+            <p class="text-muted mb-0"><i class="fas fa-envelope me-2"></i>${doctor.email}</p>
+          `;
+        } else {
+          doctorInfo.innerHTML = `
+            <p class="text-muted mb-0">No doctor assigned yet</p>
+            <p class="text-muted small">Click "Change Doctor" to assign one</p>
+          `;
+        }
+      } catch (error) {
+        console.error('Error loading assigned doctor:', error);
+        document.getElementById('assignedDoctorInfo').innerHTML = `
+          <p class="text-danger">Error loading doctor information</p>
+        `;
+      }
+    }
+
+    // Open doctor assignment modal
+    async function openDoctorModal() {
+      doctorModal.show();
+      await loadDoctorsList();
+    }
+
+    // Open appointment booking modal
+    function openAppointmentModal() {
+      if (!assignedDoctorId) {
+        alert('Please assign a doctor first before booking an appointment.');
+        return;
+      }
+      document.getElementById('appointmentDoctor').value = `Dr. ${assignedDoctorName}`;
+      appointmentModal.show();
+    }
+
+    // Load list of available doctors (with specialty filter)
+    async function loadDoctorsList() {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_BASE_URL}/doctors`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to load doctors');
+        }
+
+        const doctors = await response.json();
+        const doctorsList = document.getElementById('doctorsList');
+
+        // cache doctors for filtering
+        doctorsCache = doctors || [];
+
+        // populate specialty filter
+        const specialtySet = new Set(doctorsCache.map(d => (d.specialty || 'General')));
+        const filter = document.getElementById('specialtyFilter');
+        if (filter) {
+          filter.innerHTML = '<option value="">All specialties</option>' + Array.from(specialtySet).sort().map(s => `<option value="${s}">${s}</option>`).join('');
+        }
+
+        if (!doctorsCache || doctorsCache.length === 0) {
+          doctorsList.innerHTML = `
+            <div class="alert alert-info text-center">
+              <i class="fas fa-info-circle me-2"></i>No doctors available at the moment
+            </div>
+          `;
+          return;
+        }
+
+        renderDoctorsList();
+      } catch (error) {
+        console.error('Error loading doctors:', error);
+        document.getElementById('doctorsList').innerHTML = `
+          <div class="alert alert-danger text-center">
+            <i class="fas fa-exclamation-triangle me-2"></i>Error loading doctors. Please try again.
+          </div>
+        `;
+      }
+    }
+
+    function applySpecialtyFilter() {
+      renderDoctorsList();
+    }
+
+    function renderDoctorsList() {
+      const doctorsList = document.getElementById('doctorsList');
+      const selected = document.getElementById('specialtyFilter') ? document.getElementById('specialtyFilter').value : '';
+      const visible = selected ? doctorsCache.filter(d => (d.specialty || 'General') === selected) : doctorsCache;
+
+      if (!visible || visible.length === 0) {
+        doctorsList.innerHTML = `
+          <div class="alert alert-info text-center">
+            <i class="fas fa-info-circle me-2"></i>No doctors found for selected specialty
+          </div>
+        `;
+        return;
+      }
+
+      doctorsList.innerHTML = visible.map(doctor => `
+        <div class="card mb-3 border" style="border-radius: 15px; transition: all 0.18s;" 
+             onmouseover="this.style.boxShadow='0 6px 18px rgba(0,0,0,0.12)'" 
+             onmouseout="this.style.boxShadow='none'">
+          <div class="card-body d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center" style="gap:16px; min-width:0;">
+              <div class="avatar rounded-circle bg-light d-flex align-items-center justify-content-center" style="width:56px;height:56px;">
+                <i class="fas fa-user-md text-primary fa-lg"></i>
+              </div>
+              <div style="min-width:0;">
+                <div class="fw-bold mb-0 text-truncate">Dr. ${doctor.name}</div>
+                <div class="text-muted small text-truncate" style="max-width:520px;">
+                  ${doctor.specialty || 'General'} &nbsp;•&nbsp; ${doctor.clinicAddress || 'Location not provided'} &nbsp;•&nbsp; ${doctor.email}
+                </div>
+              </div>
+            </div>
+            <div class="text-end ms-3">
+              <a class="btn btn-outline-secondary btn-sm mb-2" href="doctor-details.html?id=${doctor.id}" target="_blank">View Profile</a>
+              <button class="btn btn-primary btn-sm" onclick="assignDoctor(${doctor.id})">Select</button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Assign selected doctor to patient
+    async function assignDoctor(doctorId) {
+      const userId = localStorage.getItem('userId');
+      const token = localStorage.getItem('token');
+
+      if (!userId) {
+        alert('User ID not found. Please login again.');
+        return;
+      }
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/patients/${userId}/assign-doctor`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ doctorId: doctorId })
+        });
+
+        if (response.ok) {
+          doctorModal.hide();
+          // Show success message
+          const successAlert = document.createElement('div');
+          successAlert.className = 'alert alert-success alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3';
+          successAlert.style.zIndex = '9999';
+          successAlert.innerHTML = `
+            <i class="fas fa-check-circle me-2"></i>Doctor assigned successfully!
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          `;
+          document.body.appendChild(successAlert);
+          setTimeout(() => successAlert.remove(), 3000);
+          
+          // Reload assigned doctor
+          loadAssignedDoctor(userId);
+        } else {
+          alert('Failed to assign doctor. Please try again.');
+        }
+      } catch (error) {
+        console.error('Error assigning doctor:', error);
+        alert('Error assigning doctor. Please try again.');
+      }
+    }
+
+    // Handle appointment booking
+    document.getElementById('appointmentForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const userId = localStorage.getItem('userId');
+      const token = localStorage.getItem('token');
+
+      const appointmentData = {
+        patientId: parseInt(userId),
+        doctorId: assignedDoctorId,
+        appointmentDate: document.getElementById('appointmentDate').value,
+        appointmentType: document.getElementById('appointmentType').value,
+        reason: document.getElementById('appointmentReason').value,
+        status: 'SCHEDULED'
+      };
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/appointments`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(appointmentData)
+        });
+
+        if (response.ok) {
+          appointmentModal.hide();
+          document.getElementById('appointmentForm').reset();
+          
+          const successAlert = document.createElement('div');
+          successAlert.className = 'alert alert-success alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3';
+          successAlert.style.zIndex = '9999';
+          successAlert.innerHTML = `
+            <i class="fas fa-check-circle me-2"></i>Appointment booked successfully!
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          `;
+          document.body.appendChild(successAlert);
+          setTimeout(() => successAlert.remove(), 3000);
+        } else {
+          alert('Failed to book appointment. Please try again.');
+        }
+      } catch (error) {
+        console.error('Error booking appointment:', error);
+        alert('Error booking appointment. Please try again.');
+      }
+    });
+
+    // Logout function
+    function logout() {
+      if (confirm('Are you sure you want to logout?')) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('userRole');
+        localStorage.removeItem('userEmail');
+        localStorage.removeItem('userName');
+        localStorage.removeItem('userId');
+        window.location.href = 'login.html';
+      }
+    }
+  </script>
+  <script src="vendor/leaflet/leaflet.js"></script>
+  <script>
+    // Leaflet + OpenStreetMap implementation (no API key required)
+    async function initHospitalsMap() {
+      if (!document.getElementById('map')) return;
+      try {
+        window.ayubotMap = L.map('map', { scrollWheelZoom: false }).setView([20, 0], 2);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 19,
+          attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(window.ayubotMap);
+
+        const userLayer = L.layerGroup().addTo(window.ayubotMap);
+        const hospitalsLayer = L.layerGroup().addTo(window.ayubotMap);
+
+        // Add a simple control to toggle voice announcements for hospital markers
+        try {
+          const AnnounceControl = L.Control.extend({
+            options: { position: 'topright' },
+            onAdd: function(map) {
+              const container = L.DomUtil.create('div', 'leaflet-control leaflet-bar');
+              const btn = L.DomUtil.create('a', '', container);
+              btn.href = '#';
+              btn.title = 'Toggle voice announcements';
+
+              function update() {
+                const v = (localStorage.getItem('announceHospitals') || 'true') === 'true';
+                btn.innerHTML = v ? '🔊' : '🔈';
+              }
+
+              L.DomEvent.on(btn, 'click', L.DomEvent.stopPropagation)
+                .on(btn, 'click', L.DomEvent.preventDefault)
+                .on(btn, 'click', function () {
+                  const cur = (localStorage.getItem('announceHospitals') || 'true') === 'true';
+                  localStorage.setItem('announceHospitals', (!cur).toString());
+                  update();
+                });
+
+              update();
+              return container;
+            }
+          });
+          new AnnounceControl().addTo(window.ayubotMap);
+        } catch (e) {
+          console.warn('Failed to add announce control', e);
+        }
+
+        // Add a transport mode control (driving / walking)
+        try {
+          const ModeControl = L.Control.extend({
+            options: { position: 'topright' },
+            onAdd: function(map) {
+              const container = L.DomUtil.create('div', 'leaflet-control leaflet-bar');
+              const btnDrive = L.DomUtil.create('a', '', container);
+              const btnWalk = L.DomUtil.create('a', '', container);
+              btnDrive.href = '#'; btnWalk.href = '#';
+              btnDrive.title = 'Driving route'; btnWalk.title = 'Walking route';
+              function update() {
+                const mode = localStorage.getItem('routeMode') || 'driving';
+                btnDrive.innerHTML = mode==='driving' ? '🚗' : '🚗';
+                btnWalk.innerHTML = mode==='walking' ? '🚶' : '🚶';
+              }
+              L.DomEvent.on(btnDrive, 'click', L.DomEvent.stopPropagation)
+                .on(btnDrive, 'click', L.DomEvent.preventDefault)
+                .on(btnDrive, 'click', function () { localStorage.setItem('routeMode','driving'); update(); });
+              L.DomEvent.on(btnWalk, 'click', L.DomEvent.stopPropagation)
+                .on(btnWalk, 'click', L.DomEvent.preventDefault)
+                .on(btnWalk, 'click', function () { localStorage.setItem('routeMode','walking'); update(); });
+              update();
+              return container;
+            }
+          });
+          new ModeControl().addTo(window.ayubotMap);
+        } catch (e) {
+          console.warn('Failed to add mode control', e);
+        }
+
+        const locationInput = document.getElementById('locationInput');
+        const searchBtn = document.getElementById('searchLocationBtn');
+        const useLocationBtn = document.getElementById('useLocationBtn');
+
+        async function geocode(query) {
+          try {
+            const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`;
+            const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+            if (!res.ok) return null;
+            const arr = await res.json();
+            if (arr && arr.length) return { lat: parseFloat(arr[0].lat), lon: parseFloat(arr[0].lon), display_name: arr[0].display_name };
+            return null;
+          } catch (e) {
+            console.error('Geocode error', e);
+            return null;
+          }
+        }
+
+        if (searchBtn) {
+          searchBtn.addEventListener('click', async () => {
+            const q = (locationInput && locationInput.value) ? locationInput.value.trim() : '';
+            if (!q) { alert('Please enter a location to search'); return; }
+            const loc = await geocode(q);
+            if (!loc) { alert('Location not found. Try a more specific query.'); return; }
+            showUser(loc.lat, loc.lon);
+            await queryAndRender(loc.lat, loc.lon);
+          });
+        }
+
+        if (useLocationBtn) {
+          useLocationBtn.addEventListener('click', () => {
+            if (!navigator.geolocation) { alert('Geolocation not supported by your browser'); return; }
+            navigator.geolocation.getCurrentPosition(async (pos) => {
+              const lat = pos.coords.latitude;
+              const lon = pos.coords.longitude;
+              if (locationInput) locationInput.value = '';
+              showUser(lat, lon);
+              await queryAndRender(lat, lon);
+            }, (err) => {
+              console.warn('Geolocation failed or denied:', err);
+              alert('Unable to get your location. You can enter a place manually instead.');
+            }, { enableHighAccuracy: true, timeout: 10000 });
+          });
+        }
+
+        function showUser(lat, lon) {
+          userLayer.clearLayers();
+          // store current user location for distance calculations
+          window.ayubotUserLocation = { lat: parseFloat(lat), lon: parseFloat(lon) };
+          L.circle([lat, lon], { radius: 60, color: '#2a9df4', fillColor: '#2a9df4', fillOpacity: 0.3 }).addTo(userLayer);
+          L.marker([lat, lon]).addTo(userLayer).bindPopup('You are here').openPopup();
+          window.ayubotMap.setView([lat, lon], 13);
+        }
+
+        async function queryAndRender(lat, lon) {
+          hospitalsLayer.clearLayers();
+          const radius = 5000;
+          const q = `[out:json][timeout:25];(node[amenity=hospital](around:${radius},${lat},${lon});way[amenity=hospital](around:${radius},${lat},${lon});relation[amenity=hospital](around:${radius},${lat},${lon}););out center;`;
+          const url = 'https://overpass-api.de/api/interpreter';
+          try {
+            const res = await fetch(url, { method: 'POST', body: q, headers: { 'Content-Type': 'text/plain' } });
+            if (!res.ok) throw new Error('Overpass API error');
+            const data = await res.json();
+            if (!data.elements || data.elements.length === 0) {
+              L.popup().setLatLng([lat, lon]).setContent('No hospitals found nearby.').openOn(window.ayubotMap);
+              return;
+            }
+            // helper: try to get route-based distance/duration via OSRM; fall back to straight-line
+            async function fetchRouteDistance(userLat, userLon, destLat, destLon) {
+              try {
+                const mode = localStorage.getItem('routeMode') || 'driving';
+                const profile = mode === 'walking' ? 'walking' : 'driving';
+                const base = 'https://router.project-osrm.org/route/v1';
+                const url = `${base}/${profile}/${userLon},${userLat};${destLon},${destLat}?overview=false&alternatives=false&steps=false`;
+                const res = await fetch(url);
+                if (!res.ok) return null;
+                const j = await res.json();
+                if (j && j.routes && j.routes.length) {
+                  return { distance: j.routes[0].distance, duration: j.routes[0].duration, mode };
+                }
+                return null;
+              } catch (e) {
+                console.warn('Route lookup failed', e);
+                return null;
+              }
+            }
+
+            data.elements.forEach(el => {
+              const elLat = el.lat || (el.center && el.center.lat);
+              const elLon = el.lon || (el.center && el.center.lon);
+              if (!elLat || !elLon) return;
+              const name = (el.tags && (el.tags.name || 'Hospital'));
+              const address = el.tags && (el.tags['addr:full'] || el.tags['addr:street'] || '');
+              let distanceText = '';
+              let durationText = '';
+              const marker = L.marker([elLat, elLon]);
+              // initial popup shows name/address and provides route on demand
+              marker.bindPopup(`<strong>${name}</strong><br/>${address}<br/><em>Click to calculate route</em>`);
+              hospitalsLayer.addLayer(marker);
+
+              // Compute route only when popup is opened (on-demand)
+              marker.on('popupopen', async () => {
+                try {
+                  const popup = marker.getPopup();
+                  popup.setContent(`<strong>${name}</strong><br/>${address}<br/><em>Calculating route...</em>`);
+                  let distanceTextLocal = '';
+                  let durationTextLocal = '';
+                  if (window.ayubotUserLocation) {
+                    const route = await fetchRouteDistance(window.ayubotUserLocation.lat, window.ayubotUserLocation.lon, elLat, elLon);
+                    if (route && route.distance != null) {
+                      distanceTextLocal = route.distance >= 1000 ? (route.distance/1000).toFixed(2) + ' km' : Math.round(route.distance) + ' m';
+                      const mins = Math.round(route.duration/60);
+                      durationTextLocal = mins < 60 ? `${mins} min` : `${Math.floor(mins/60)} h ${mins%60} min`;
+                    } else {
+                      // fallback to straight-line distance
+                      const d = L.latLng(elLat, elLon).distanceTo(L.latLng(window.ayubotUserLocation.lat, window.ayubotUserLocation.lon));
+                      if (!isNaN(d)) distanceTextLocal = d>=1000?(d/1000).toFixed(2)+' km':Math.round(d)+' m';
+                    }
+                  }
+                  const modeLabel = localStorage.getItem('routeMode') || 'driving';
+                  const extra = distanceTextLocal ? `<br/><em>Distance (${modeLabel}): ${distanceTextLocal}${durationTextLocal?` • ${durationTextLocal}`:''}</em>` : '';
+                  popup.setContent(`<strong>${name}</strong><br/>${address}${extra}`);
+
+                  // speak the result if enabled
+                  try {
+                    const announce = (localStorage.getItem('announceHospitals') || 'true') === 'true';
+                    if (announce && 'speechSynthesis' in window) {
+                      const mode = localStorage.getItem('routeMode') || 'driving';
+                      const parts = [name, address].filter(Boolean).join('. ');
+                      const text = distanceTextLocal ? `${parts}. ${mode==='walking'?'Walking':'Driving'} distance ${distanceTextLocal}${durationTextLocal?`, approximately ${durationTextLocal}`:''}.` : parts;
+                      window.speechSynthesis.cancel();
+                      window.speechSynthesis.speak(new SpeechSynthesisUtterance(text));
+                    }
+                  } catch (err) { console.error('TTS error', err); }
+                } catch (e) {
+                  console.warn('Error computing or displaying route on demand', e);
+                  try { marker.getPopup().setContent(`<strong>${name}</strong><br/>${address}<br/><em>Route unavailable</em>`); } catch(_){}
+                }
+              });
+            });
+          } catch (err) {
+            console.error('Overpass query failed', err);
+          }
+        }
+
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(async (pos) => {
+            const lat = pos.coords.latitude;
+            const lon = pos.coords.longitude;
+            if (locationInput) locationInput.value = '';
+            showUser(lat, lon);
+            await queryAndRender(lat, lon);
+          }, (err) => {
+            console.warn('Geolocation failed or denied:', err);
+            if (locationInput) {
+              locationInput.focus();
+              locationInput.placeholder = 'Enter city, address or postal code (geolocation denied)';
+            }
+          }, { enableHighAccuracy: true, timeout: 10000 });
+        } else {
+          console.warn('Geolocation not supported');
+          if (locationInput) locationInput.placeholder = 'Enter city, address or postal code';
+        }
+      } catch (e) {
+        console.error('Error initializing hospitals map', e);
+      }
+    }
+  </script>
+  <script>
+    // Ensure initHospitalsMap runs after Leaflet and the function are loaded
+    (function() {
+      function loadLeafletFallback(cb) {
+        if (typeof L !== 'undefined') return cb && cb();
+        try {
+          // Try local files first (place real Leaflet files under vendor/leaflet)
+          const cssLocal = document.createElement('link');
+          cssLocal.rel = 'stylesheet';
+          cssLocal.href = 'vendor/leaflet/leaflet.css';
+          document.head.appendChild(cssLocal);
+
+          const sLocal = document.createElement('script');
+          sLocal.src = 'vendor/leaflet/leaflet.js';
+          sLocal.async = true;
+          sLocal.onload = function() {
+            if (typeof L !== 'undefined') return cb && cb();
+            // If local script didn't expose Leaflet, fall back to CDN
+            const cssCdn = document.createElement('link');
+            cssCdn.rel = 'stylesheet';
+            cssCdn.href = 'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css';
+            document.head.appendChild(cssCdn);
+
+            const sCdn = document.createElement('script');
+            sCdn.src = 'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js';
+            sCdn.async = true;
+            sCdn.onload = function() { cb && cb(); };
+            sCdn.onerror = function() { console.error('Failed to load Leaflet from both local and CDN'); cb && cb(); };
+            document.body.appendChild(sCdn);
+          };
+          sLocal.onerror = function() {
+            // Local missing or failed — try CDN
+            const cssCdn = document.createElement('link');
+            cssCdn.rel = 'stylesheet';
+            cssCdn.href = 'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css';
+            document.head.appendChild(cssCdn);
+
+            const sCdn = document.createElement('script');
+            sCdn.src = 'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js';
+            sCdn.async = true;
+            sCdn.onload = function() { cb && cb(); };
+            sCdn.onerror = function() { console.error('Failed to load Leaflet from CDN'); cb && cb(); };
+            document.body.appendChild(sCdn);
+          };
+          document.body.appendChild(sLocal);
+        } catch (err) {
+          console.error('Error loading Leaflet fallback', err);
+          cb && cb();
+        }
+      }
+
+      function callInit() {
+        try {
+          loadLeafletFallback(function() {
+            try {
+              if (typeof initHospitalsMap === 'function' && typeof L !== 'undefined') {
+                initHospitalsMap();
+              } else if (typeof initHospitalsMap === 'function') {
+                console.error('Leaflet not available; initHospitalsMap skipped');
+              }
+            } catch (e) {
+              console.error('Error calling initHospitalsMap after fallback:', e);
+            }
+          });
+        } catch (e) {
+          console.error('Error in callInit wrapper:', e);
+        }
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', callInit);
+      } else {
+        callInit();
+      }
+    })();
+  </script>
+  <!-- lang.js removed -->
+  <script src="theme.js"></script>
+</body>
+</html>

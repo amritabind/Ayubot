@@ -1,0 +1,25 @@
+graph TD
+  classDef iter fill:#f9f,stroke:#333,stroke-width:1px;
+  A[Iteration 0\nInception & Foundations]:::iter
+  B[Iteration 1\nAuth & User Mgmt]:::iter
+  C[Iteration 2\nReports Upload & Storage]:::iter
+  D[Iteration 3\nOCR / AI Extraction]:::iter
+  E[Iteration 4\nConsultations & Appointments]:::iter
+  F[Iteration 5\nDataset Processing & Dashboards]:::iter
+  G[Iteration 6\nAdmin, Monitoring & Hardening]:::iter
+
+  A -->|Planning → Risk Analysis → Prototype| B
+  B -->|Planning → Risk Analysis → Prototype| C
+  C -->|Planning → Risk Analysis → Prototype| D
+  D -->|Planning → Risk Analysis → Prototype| E
+  E -->|Planning → Risk Analysis → Prototype| F
+  F -->|Planning → Risk Analysis → Prototype| G
+  G -->|Next cycle / continuous improvement| A
+
+  style A fill:#ffefc4,stroke:#333,stroke-width:1px
+  style B fill:#ffd9c7
+  style C fill:#ffc7c7
+  style D fill:#e6d3ff
+  style E fill:#d0f0c0
+  style F fill:#cde7ff
+  style G fill:#f0f0f0

@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AyuBot - My Profile</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+  <script src="config.js"></script>
+  <style>
+    body {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      font-family: 'Segoe UI', sans-serif;
+      padding: 20px 0;
+    }
+    .navbar {
+      background: var(--card-bg, #1e2a4a);
+      box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+      margin-bottom: 30px;
+    }
+    .navbar-brand { font-size: 28px; font-weight: 900; color: white !important; }
+    .profile-container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .profile-header {
+      background: var(--card-bg, white);
+      border-radius: 20px;
+      padding: 40px;
+      margin-bottom: 30px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      text-align: center;
+      color: var(--text-primary, #333);
+    }
+    .profile-title {
+      font-size: 36px;
+      font-weight: bold;
+      background: linear-gradient(45deg, #667eea, #764ba2);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .stat-box {
+      background: var(--bg-tertiary, #f8f9fa);
+      border-radius: 15px;
+      padding: 20px;
+      margin: 10px;
+      text-align: center;
+    }
+    .stat-value {
+      font-size: 32px;
+      font-weight: bold;
+      color: #667eea;
+    }
+    .section-card {
+      background: var(--card-bg, white);
+      border-radius: 20px;
+      padding: 30px;
+      margin-bottom: 20px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+      color: var(--text-primary, #333);
+    }
+    .section-title {
+      font-size: 20px;
+      font-weight: bold;
+      color: #667eea;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #eee;
+    }
+    .form-control, .form-select {
+      border-radius: 10px;
+      padding: 12px;
+      border: 2px solid var(--input-border, #ddd);
+      background: var(--input-bg, white);
+      color: var(--text-primary, #333);
+    }
+    .form-control:focus, .form-select:focus {
+      border-color: #667eea;
+      box-shadow: 0 0 0 0.2rem rgba(102,126,234,0.25);
+    }
+    .btn-save {
+      background: linear-gradient(45deg, #667eea, #764ba2);
+      color: white;
+      border: none;
+      padding: 15px 40px;
+      border-radius: 25px;
+      font-size: 18px;
+      font-weight: bold;
+      box-shadow: 0 10px 30px rgba(102,126,234,0.4);
+    }
+    .btn-save:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 15px 40px rgba(102,126,234,0.6);
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar navbar-dark">
+    <div class="container">
+      <a class="navbar-brand" href="patient-dashboard.html">
+        <i class="fas fa-robot"></i> AyuBot
+      </a>
+      <div class="ms-auto d-flex gap-2">
+        <span class="text-white"><strong id="userName">Demo Patient</strong></span>
+        <button onclick="window.location.href='patient-dashboard.html'" class="btn btn-outline-light btn-sm">
+          <i class="fas fa-home me-1"></i>Dashboard
+        </button>
+        <button onclick="logout()" class="btn btn-outline-danger btn-sm">
+          <i class="fas fa-sign-out-alt me-1"></i>Logout
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container profile-container">
+    <div class="profile-header">
+      <i class="fas fa-user-circle" style="font-size: 80px; color: #667eea;"></i>
+      <h1 class="profile-title mt-3">My Medical Profile</h1>
+      <p class="text-muted">Update your medical information for better AI diagnosis</p>
+    </div>
+
+    <div class="row mb-4">
+      <div class="col-md-4">
+        <div class="stat-box">
+          <div class="stat-value" id="ageDisplay">--</div>
+          <div class="text-muted">Age</div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="stat-box">
+          <div class="stat-value" id="bmiDisplay">--</div>
+          <div class="text-muted">BMI</div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="stat-box">
+          <div class="stat-value" id="bloodGroupDisplay">--</div>
+          <div class="text-muted">Blood Group</div>
+        </div>
+      </div>
+    </div>
+
+    <form id="profileForm">
+      <!-- Personal Information -->
+      <div class="section-card">
+        <h5 class="section-title"><i class="fas fa-user me-2"></i>Personal Information</h5>
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Full Name *</label>
+            <input type="text" class="form-control" id="fullName" required readonly>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Email *</label>
+            <input type="email" class="form-control" id="email" required readonly>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Date of Birth *</label>
+            <input type="date" class="form-control" id="dateOfBirth">
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Gender *</label>
+            <select class="form-select" id="gender">
+              <option value="">Select...</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Phone Number *</label>
+            <input type="tel" class="form-control" id="phoneNumber" placeholder="+1-555-0101">
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Blood Group *</label>
+            <select class="form-select" id="bloodGroup">
+              <option value="">Select...</option>
+              <option value="A+">A+</option>
+              <option value="A-">A-</option>
+              <option value="B+">B+</option>
+              <option value="B-">B-</option>
+              <option value="O+">O+</option>
+              <option value="O-">O-</option>
+              <option value="AB+">AB+</option>
+              <option value="AB-">AB-</option>
+            </select>
+          </div>
+          <div class="col-12 mb-3">
+            <label class="form-label">Address</label>
+            <textarea class="form-control" id="address" rows="2" placeholder="Street, City, State, ZIP"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Physical Measurements -->
+      <div class="section-card">
+        <h5 class="section-title"><i class="fas fa-weight me-2"></i>Physical Measurements</h5>
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Height (cm)</label>
+            <input type="number" class="form-control" id="height" placeholder="175" step="0.1">
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Weight (kg)</label>
+            <input type="number" class="form-control" id="weight" placeholder="70" step="0.1">
+          </div>
+        </div>
+      </div>
+
+      <!-- Medical History -->
+      <div class="section-card">
+        <h5 class="section-title"><i class="fas fa-hospital me-2"></i>Medical Information</h5>
+        <div class="mb-3">
+          <label class="form-label">Chronic Conditions</label>
+          <textarea class="form-control" id="chronicConditions" rows="3" placeholder="Diabetes, Hypertension, Asthma, etc."></textarea>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Current Medications</label>
+          <textarea class="form-control" id="currentMedications" rows="3" placeholder="List all medications you are currently taking with dosage"></textarea>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Medical History</label>
+          <textarea class="form-control" id="medicalHistory" rows="3" placeholder="No major medical history"></textarea>
+        </div>
+      </div>
+
+      <!-- Lifestyle Information -->
+      <div class="section-card">
+        <h5 class="section-title"><i class="fas fa-heartbeat me-2"></i>Lifestyle Information</h5>
+        <div class="row">
+          <div class="col-md-4 mb-3">
+            <label class="form-label">Smoking Status</label>
+            <select class="form-select" id="smokingStatus">
+              <option value="">Select...</option>
+              <option value="Never">Never</option>
+              <option value="Former">Former</option>
+              <option value="Current">Current</option>
+            </select>
+          </div>
+          <div class="col-md-4 mb-3">
+            <label class="form-label">Alcohol Consumption</label>
+            <select class="form-select" id="alcoholConsumption">
+              <option value="">Select...</option>
+              <option value="Never">Never</option>
+              <option value="Occasionally">Occasionally</option>
+              <option value="Regularly">Regularly</option>
+            </select>
+          </div>
+          <div class="col-md-4 mb-3">
+            <label class="form-label">Exercise Frequency</label>
+            <select class="form-select" id="exerciseFrequency">
+              <option value="">Select...</option>
+              <option value="Never">Never</option>
+              <option value="1-2 times/week">1-2 times/week</option>
+              <option value="3-4 times/week">3-4 times/week</option>
+              <option value="5+ times/week">5+ times/week</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Emergency Contact -->
+      <div class="section-card">
+        <h5 class="section-title"><i class="fas fa-phone-alt me-2"></i>Emergency Contact</h5>
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Emergency Contact Name</label>
+            <input type="text" class="form-control" id="emergencyContactName" placeholder="John Doe">
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Emergency Contact Phone</label>
+            <input type="tel" class="form-control" id="emergencyContactPhone" placeholder="+1-555-0102">
+          </div>
+        </div>
+      </div>
+
+      <div class="text-center mb-5">
+        <button type="submit" class="btn-save">
+          <i class="fas fa-save me-2"></i>Save Profile
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const API_BASE_URL = API_CONFIG.getApiUrl();
+    let profileId = null;
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const token = localStorage.getItem('token');
+      const userId = localStorage.getItem('userId');
+      const userName = localStorage.getItem('userName');
+      const userEmail = localStorage.getItem('userEmail');
+
+      if (!token) {
+        window.location.href = 'login.html';
+        return;
+      }
+
+      document.getElementById('userName').textContent = userName || 'Patient';
+      document.getElementById('fullName').value = userName || '';
+      document.getElementById('email').value = userEmail || '';
+
+      if (userId) {
+        loadProfile(userId);
+      }
+    });
+
+    async function loadProfile(userId) {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_BASE_URL}/profiles/user/${userId}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (response.ok) {
+          const profile = await response.json();
+          profileId = profile.id;
+          fillForm(profile);
+        }
+      } catch (error) {
+        console.error('Error loading profile:', error);
+      }
+    }
+
+    function fillForm(profile) {
+      if (profile.dateOfBirth) document.getElementById('dateOfBirth').value = profile.dateOfBirth;
+      if (profile.gender) document.getElementById('gender').value = profile.gender;
+      if (profile.phoneNumber) document.getElementById('phoneNumber').value = profile.phoneNumber;
+      if (profile.bloodGroup) document.getElementById('bloodGroup').value = profile.bloodGroup;
+      if (profile.address) document.getElementById('address').value = profile.address;
+      if (profile.height) document.getElementById('height').value = profile.height;
+      if (profile.weight) document.getElementById('weight').value = profile.weight;
+      if (profile.chronicConditions) document.getElementById('chronicConditions').value = profile.chronicConditions;
+      if (profile.currentMedications) document.getElementById('currentMedications').value = profile.currentMedications;
+      if (profile.medicalHistory) document.getElementById('medicalHistory').value = profile.medicalHistory;
+      if (profile.smokingStatus) document.getElementById('smokingStatus').value = profile.smokingStatus;
+      if (profile.alcoholConsumption) document.getElementById('alcoholConsumption').value = profile.alcoholConsumption;
+      if (profile.exerciseFrequency) document.getElementById('exerciseFrequency').value = profile.exerciseFrequency;
+      if (profile.emergencyContactName) document.getElementById('emergencyContactName').value = profile.emergencyContactName;
+      if (profile.emergencyContactPhone) document.getElementById('emergencyContactPhone').value = profile.emergencyContactPhone;
+
+      updateStats(profile);
+    }
+
+    function updateStats(profile) {
+      // Calculate age
+      if (profile.dateOfBirth) {
+        const birthDate = new Date(profile.dateOfBirth);
+        const age = new Date().getFullYear() - birthDate.getFullYear();
+        document.getElementById('ageDisplay').textContent = age;
+      }
+
+      // Calculate BMI
+      if (profile.height && profile.weight) {
+        const heightInMeters = profile.height / 100;
+        const bmi = (profile.weight / (heightInMeters * heightInMeters)).toFixed(1);
+        document.getElementById('bmiDisplay').textContent = bmi;
+      }
+
+      // Blood Group
+      if (profile.bloodGroup) {
+        document.getElementById('bloodGroupDisplay').textContent = profile.bloodGroup;
+      }
+    }
+
+    document.getElementById('profileForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const userId = localStorage.getItem('userId');
+      const token = localStorage.getItem('token');
+
+      const profileData = {
+        userId: parseInt(userId),
+        dateOfBirth: document.getElementById('dateOfBirth').value || null,
+        gender: document.getElementById('gender').value || null,
+        phoneNumber: document.getElementById('phoneNumber').value || null,
+        bloodGroup: document.getElementById('bloodGroup').value || null,
+        address: document.getElementById('address').value || null,
+        height: parseFloat(document.getElementById('height').value) || null,
+        weight: parseFloat(document.getElementById('weight').value) || null,
+        chronicConditions: document.getElementById('chronicConditions').value || null,
+        currentMedications: document.getElementById('currentMedications').value || null,
+        medicalHistory: document.getElementById('medicalHistory').value || null,
+        smokingStatus: document.getElementById('smokingStatus').value || null,
+        alcoholConsumption: document.getElementById('alcoholConsumption').value || null,
+        exerciseFrequency: document.getElementById('exerciseFrequency').value || null,
+        emergencyContactName: document.getElementById('emergencyContactName').value || null,
+        emergencyContactPhone: document.getElementById('emergencyContactPhone').value || null
+      };
+
+      try {
+        let response;
+        if (profileId) {
+          response = await fetch(`${API_BASE_URL}/profiles/${profileId}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(profileData)
+          });
+        } else {
+          response = await fetch(`${API_BASE_URL}/profiles`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(profileData)
+          });
+        }
+
+        if (response.ok) {
+          const saved = await response.json();
+          profileId = saved.id;
+          updateStats(saved);
+          alert('Profile saved successfully!');
+        } else {
+          alert('Failed to save profile. Please try again.');
+        }
+      } catch (error) {
+        console.error('Error saving profile:', error);
+        alert('Error saving profile. Please try again.');
+      }
+    });
+
+    function logout() {
+      if (confirm('Are you sure you want to logout?')) {
+        localStorage.clear();
+        window.location.href = 'login.html';
+      }
+    }
+  </script>
+  <!-- lang.js removed -->
+  <script src="theme.js"></script>
+</body>
+</html>

@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AyuBot - Patient Report</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+  <script src="config.js"></script>
+  <style>
+    body { background: #f4f7fa; min-height:100vh; font-family: 'Segoe UI', sans-serif; }
+    .report-preview { max-width:1100px; margin:40px auto; }
+    .file-preview { background: white; border-radius:10px; padding:18px; border:1px solid #e9ecef; }
+    .meta-row { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+    pre.analysis { background:#fff3cd; padding:12px; border-radius:8px; white-space:pre-wrap; }
+  </style>
+</head>
+<body>
+  <div class="report-preview container">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h3><i class="fas fa-file-medical me-2"></i>Patient Report</h3>
+      <div>
+        <button class="btn btn-secondary" onclick="location.href='patient-dashboard.html'"><i class="fas fa-arrow-left me-1"></i>Back</button>
+      </div>
+    </div>
+
+    <div id="loading" class="text-center py-5">
+      <div class="spinner-border text-primary" role="status"></div>
+      <div class="mt-3 text-muted">Loading report...</div>
+    </div>
+
+    <div id="content" style="display:none;">
+      <div class="mb-3 file-preview">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <h4 id="reportName">Report</h4>
+            <div class="meta-row text-muted small">
+              <span id="reportType">Type</span>
+              <span>•</span>
+              <span id="reportDate">Date</span>
+              <span>•</span>
+              <span id="sharedBy">Uploaded by</span>
+            </div>
+          </div>
+          <div>
+            <a id="downloadBtn" class="btn btn-outline-primary btn-sm" download><i class="fas fa-download me-1"></i>Download</a>
+          </div>
+        </div>
+
+        <hr />
+
+        <div id="fileContainer" style="min-height:200px;">
+          <!-- PDF iframe or image preview inserted here -->
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <h5>AI Analysis</h5>
+        <pre id="aiAnalysis" class="analysis">No analysis available</pre>
+      </div>
+
+      <div class="mb-3">
+        <h5>Extracted Text</h5>
+        <pre id="extractedText" class="analysis">No extracted text available</pre>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE_URL = API_CONFIG.getApiUrl();
+
+    function getParam(name){
+      const p = new URLSearchParams(window.location.search);
+      return p.get(name);
+    }
+
+    async function loadReport(reportId){
+      const token = localStorage.getItem('token');
+      try{
+        const headers = {};
+        if(token) {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
+        const resp = await fetch(`${API_BASE_URL}/reports/${reportId}`, { headers });
+        if(!resp.ok) throw new Error('Failed to load report');
+        const r = await resp.json();
+        renderReport(r);
+      }catch(err){
+        console.error(err);
+        document.getElementById('loading').innerHTML = `<div class="alert alert-danger">Error loading report. ${err.message}</div>`;
+      }
+    }
+
+    function renderReport(r){
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('content').style.display = 'block';
+
+      document.getElementById('reportName').textContent = r.reportName || `Report #${r.id}`;
+      document.getElementById('reportType').textContent = (r.reportType || 'General').toUpperCase();
+      document.getElementById('reportDate').textContent = r.createdAt ? new Date(r.createdAt).toLocaleString() : '—';
+      document.getElementById('sharedBy').textContent = r.uploader ? (r.uploader.name || `User #${r.uploader.id}`) : (r.uploadedBy ? `User #${r.uploadedBy}` : 'User');
+
+      const fileContainer = document.getElementById('fileContainer');
+      const downloadBtn = document.getElementById('downloadBtn');
+
+      if (r.fileData) {
+        if (r.fileData.startsWith('data:application/pdf')){
+          fileContainer.innerHTML = `<iframe src="${r.fileData}" style="width:100%; height:600px; border:0;"></iframe>`;
+          downloadBtn.href = r.fileData;
+        } else if (r.fileData.startsWith('data:image')){
+          fileContainer.innerHTML = `<img src="${r.fileData}" class="img-fluid rounded" alt="Report image" style="max-height:600px; width:100%; object-fit:contain;"/>`;
+          downloadBtn.href = r.fileData;
+        } else {
+          fileContainer.innerHTML = `<div class="alert alert-secondary">Preview not available. <a href="#" id="dl">Download</a></div>`;
+          downloadBtn.style.display = 'inline-block';
+          downloadBtn.href = '#';
+        }
+      } else {
+        fileContainer.innerHTML = `<div class="alert alert-secondary">No file attached to this report.</div>`;
+        downloadBtn.style.display = 'none';
+      }
+
+      document.getElementById('aiAnalysis').textContent = r.aiAnalysis || 'Analysis pending';
+      document.getElementById('extractedText').textContent = r.extractedText || 'No extracted text available';
+    }
+
+    // Run
+    (function(){
+      const id = getParam('reportId');
+      if(id) {
+        loadReport(id);
+        return;
+      }
+
+      // No specific report requested -> load list of patient's reports
+      const userId = localStorage.getItem('userId');
+      if(!userId) {
+        document.getElementById('loading').innerHTML = `<div class="alert alert-warning">No reportId provided in URL</div>`;
+        return;
+      }
+      loadReportsForPatient(userId);
+    })();
+
+    async function loadReportsForPatient(patientId){
+      try{
+        const token = localStorage.getItem('token');
+        patientId = parseInt(patientId);
+        if(isNaN(patientId)){
+          throw new Error('Invalid patient ID');
+        }
+        console.log('Fetching reports for patient:', patientId);
+        const url = `${API_BASE_URL}/reports/patient/${patientId}`;
+        console.log('URL:', url);
+        
+        // Try without auth header first (permitAll in SecurityConfig)
+        const headers = {};
+        if(token) {
+          headers['Authorization'] = `Bearer ${token}`;
+          console.log('Using token');
+        }
+        
+        const resp = await fetch(url, { headers });
+        console.log('Response status:', resp.status);
+        if(!resp.ok) {
+          const errText = await resp.text();
+          console.error('Error response:', errText);
+          throw new Error(`Failed to load reports (${resp.status})`);
+        }
+        const reports = await resp.json();
+        renderReportList(reports);
+      }catch(err){
+        console.error(err);
+        document.getElementById('loading').innerHTML = `<div class="alert alert-danger">Error loading reports. ${err.message}</div>`;
+      }
+    }
+
+    function renderReportList(reports){
+      document.getElementById('loading').style.display = 'none';
+      const content = document.getElementById('content');
+      content.style.display = 'block';
+
+      // Replace content with a list view
+      const html = [];
+      html.push('<div class="mb-3 file-preview">');
+      html.push('<h5>Your Reports</h5>');
+      if(!reports || reports.length === 0){
+        html.push('<div class="alert alert-secondary">You have no uploaded reports.</div>');
+      } else {
+        html.push('<div class="list-group">');
+        reports.forEach(r => {
+          const name = r.reportName || `Report #${r.id}`;
+          const when = r.createdAt ? new Date(r.createdAt).toLocaleString() : '';
+          html.push(`<a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" href="patient-reports.html?reportId=${r.id}">`);
+          html.push(`<div><strong>${name}</strong><div class="small text-muted">${r.reportType || ''} • ${when}</div></div>`);
+          html.push('<div><i class="fas fa-chevron-right"></i></div>');
+          html.push('</a>');
+        });
+        html.push('</div>');
+      }
+      html.push('</div>');
+
+      content.innerHTML = html.join('\n');
+    }
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="theme.js"></script>
+</body>
+</html>
