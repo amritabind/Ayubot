@@ -33,7 +33,7 @@ public class MedicalReport {
     @Column(name = "ai_analysis", columnDefinition = "TEXT")
     private String aiAnalysis;
     
-    @Column(name = "file_data", columnDefinition = "LONGTEXT")
+    @Column(name = "file_data", columnDefinition = "TEXT")
     private String fileData;
     
     @Column(name = "created_at")

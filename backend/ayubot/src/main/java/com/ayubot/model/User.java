@@ -29,7 +29,7 @@ public class User {
     @Column(name = "specialty")
     private String specialty;
 
-    @Column(name = "license_image", columnDefinition = "LONGTEXT")
+    @Column(name = "license_image", columnDefinition = "TEXT")
     private String licenseImage;
 
     @Column(name = "bio", columnDefinition = "TEXT")
