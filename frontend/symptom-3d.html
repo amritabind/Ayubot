@@ -460,6 +460,9 @@
     import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.167.1/examples/jsm/loaders/GLTFLoader.js';
     import * as THREE from 'three';
 
+    // Define API URL from global config
+    const API_BASE_URL = API_CONFIG.getApiUrl();
+
     const selectedPartDiv = document.getElementById("selected-part");
     const symptomInput = document.getElementById("symptomInput");
     const responsePanel = document.getElementById("response-panel");
